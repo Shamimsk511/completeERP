@@ -11,7 +11,7 @@
         <div class="card-header">
             <h3 class="card-title">Aging Report as of {{ $referenceDate->format('M d, Y') }}</h3>
             <div class="card-tools">
-                <form action="{{ route('payables.reports.aging') }}" method="GET" class="form-inline">
+                <form action="{{ route('aging.index') }}" method="GET" class="form-inline">
                     <div class="input-group input-group-sm">
                         <div class="input-group-prepend">
                             <span class="input-group-text">Reference Date</span>
@@ -74,7 +74,7 @@
             </div>
         </div>
         <div class="card-footer">
-            <a href="{{ route('payables.reports.detailed-aging') }}" class="btn btn-info">
+            <a href="{{ route('aging.detailed') }}" class="btn btn-info">
                 <i class="fas fa-list"></i> View Detailed Aging Report
             </a>
             <button onclick="window.print()" class="btn btn-default">

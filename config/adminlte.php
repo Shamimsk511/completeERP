@@ -467,7 +467,7 @@ return [
                 ],
                 [
                     'text' => 'Aging Report',
-                    'url'  => '/payables/reports/aging',
+                    'url'  => 'aging',
                     'icon' => 'fas fa-calendar-alt',
                     'can'  => 'payee-reports',
                 ],

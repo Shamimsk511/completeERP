@@ -125,15 +125,18 @@ class CashFlowReportController extends Controller
      */
     public function getSalesInsights(Request $request)
     {
-        $startDate = $request->get('start_date') ? Carbon::parse($request->get('start_date')) : Carbon::today();
-        $endDate = $request->get('end_date') ? Carbon::parse($request->get('end_date')) : Carbon::today();
-
-        $invoiceType = $request->get('invoice_type');
         $timezone = config('app.timezone') ?: 'UTC';
+        $startDate = $request->get('start_date')
+            ? Carbon::parse($request->get('start_date'), $timezone)->startOfDay()
+            : Carbon::now($timezone)->startOfDay();
+        $endDate = $request->get('end_date')
+            ? Carbon::parse($request->get('end_date'), $timezone)->endOfDay()
+            : Carbon::now($timezone)->endOfDay();
+        $invoiceType = $request->get('invoice_type');
 
         if (config('perf.enabled')) {
             $cacheKey = sprintf(
-                'cashflow.sales-insights.%s.%s.%s.%s',
+                'cashflow.sales-insights.v2.%s.%s.%s.%s',
                 $startDate->toDateString(),
                 $endDate->toDateString(),
                 $invoiceType ?: 'all',
@@ -153,8 +156,8 @@ class CashFlowReportController extends Controller
 
     private function buildSalesInsightsData(Carbon $startDate, Carbon $endDate, ?string $invoiceType, string $timezone)
     {
-        $rangeStart = $startDate->copy()->startOfDay();
-        $rangeEnd = $endDate->copy()->endOfDay();
+        $rangeStart = $startDate->copy()->setTimezone($timezone)->startOfDay();
+        $rangeEnd = $endDate->copy()->setTimezone($timezone)->endOfDay();
 
         $invoiceQuery = Invoice::query()
             ->whereBetween('invoice_date', [$startDate->toDateString(), $endDate->toDateString()]);
@@ -170,15 +173,21 @@ class CashFlowReportController extends Controller
         // Hourly sales (9 AM - 10 PM) grouped by created_at hour, filtered by local date range
         // Values before 09:00 roll into 09:00; values after 22:00 roll into 22:00.
         $hourlyRows = Invoice::query()
+            ->whereBetween('invoice_date', [$startDate->toDateString(), $endDate->toDateString()])
             ->when($invoiceType, fn($q) => $q->where('invoice_type', $invoiceType))
-            ->whereBetween('created_at', [$rangeStart, $rangeEnd])
             ->get(['total', 'created_at'])
-            ->groupBy(function ($invoice) use ($timezone) {
+            ->filter(function ($invoice) use ($rangeStart, $rangeEnd, $timezone) {
                 if (!$invoice->created_at) {
-                    return null;
+                    return false;
                 }
 
-                $hour = $invoice->created_at->timezone($timezone)->hour;
+                $createdAtLocal = $invoice->created_at->copy()->setTimezone($timezone);
+
+                return $createdAtLocal->greaterThanOrEqualTo($rangeStart)
+                    && $createdAtLocal->lessThanOrEqualTo($rangeEnd);
+            })
+            ->groupBy(function ($invoice) use ($timezone) {
+                $hour = $invoice->created_at->copy()->setTimezone($timezone)->hour;
 
                 if ($hour < 9) {
                     return 9;
