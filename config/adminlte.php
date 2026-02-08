@@ -164,6 +164,10 @@ return [
             'topnav' => true,
             'classes' => 'topnav-hide-mobile',
         ],
+        [
+            'type' => 'fullscreen-widget',
+            'topnav_right' => true,
+        ],
 
         // =====================================================================
         // SIDEBAR NAVIGATION

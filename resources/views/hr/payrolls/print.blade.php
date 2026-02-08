@@ -1,3 +1,9 @@
+@php
+    $activePrintTemplate = $selectedTemplate ?? ($businessSettings->invoice_template ?? 'standard');
+    if (!in_array($activePrintTemplate, ['standard', 'modern', 'simple', 'bold', 'elegant', 'imaginative'], true)) {
+        $activePrintTemplate = 'standard';
+    }
+@endphp
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,8 +16,9 @@
         th, td { border: 1px solid #ddd; padding: 6px; }
         th { background: #f5f5f5; }
     </style>
+    @include('partials.print-theme-styles')
 </head>
-<body>
+<body class="print-theme template-{{ $activePrintTemplate }}">
     <h2>Payroll Slip</h2>
     <p><strong>Employee:</strong> {{ $payroll->employee->name }}</p>
     <p><strong>Period:</strong> {{ $payroll->period_start->format('d M, Y') }} - {{ $payroll->period_end->format('d M, Y') }}</p>
@@ -32,3 +39,4 @@
     </table>
 </body>
 </html>
+

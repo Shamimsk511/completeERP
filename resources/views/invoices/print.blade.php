@@ -1,10 +1,39 @@
+@php
+    $selectedTemplate = isset($selectedTemplate) ? (string) $selectedTemplate : 'standard';
+    $allowedTemplates = ['standard', 'modern', 'simple', 'bold', 'elegant', 'imaginative'];
+    if (!in_array($selectedTemplate, $allowedTemplates, true)) {
+        $selectedTemplate = 'standard';
+    }
+    $activePrintTemplate = $selectedTemplate;
+
+    $defaultPrintOptions = [
+        'show_company_phone' => true,
+        'show_company_email' => true,
+        'show_company_address' => true,
+        'show_company_bin' => true,
+        'show_bank_details' => true,
+        'show_terms' => true,
+        'show_footer_message' => true,
+        'show_customer_qr' => true,
+        'show_signatures' => true,
+        'invoice_phone_override' => '',
+    ];
+
+    $printOptions = array_merge($defaultPrintOptions, isset($printOptions) ? (array) $printOptions : []);
+
+    $displayPhone = trim((string) ($printOptions['invoice_phone_override'] ?? ''));
+    if ($displayPhone === '') {
+        $displayPhone = (string) ($businessSettings->phone ?? '');
+    }
+
+@endphp
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Invoice #{{ $invoice->invoice_number }}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@400;600;700;800&family=Playfair+Display:wght@500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -303,6 +332,10 @@
             grid-template-columns: 1fr 3fr;
             gap: 16px;
             margin-bottom: 25px;
+        }
+
+        .terms-bank-single {
+            grid-template-columns: 1fr;
         }
 
         .bank-box,
@@ -633,7 +666,7 @@
         }
         
         /* Mobile Responsive */
-        @media (max-width: 768px) {
+        @media screen and (max-width: 768px) {
             .invoice-container {
                 padding: 12px;
                 transform: scale(1);
@@ -715,8 +748,9 @@
   text-align: left;           /* ensures text starts from left edge */
 }
     </style>
+    @include('partials.print-theme-styles')
 </head>
-<body>
+<body class="print-theme invoice-template template-{{ $activePrintTemplate }}">
     <div class="invoice-container">
 @php
     // Use snapshot fields for historical accuracy
@@ -745,17 +779,28 @@
             <div class="company-info">
                 <h1>{{ $businessSettings->business_name ?? config('adminlte.title') }}</h1>
                 <div class="company-details">
-                    @if(!empty($businessSettings->phone))
-                        Phone: {{ $businessSettings->phone }}
+                    @php
+                        $companyMetaItems = [];
+                        if (!empty($printOptions['show_company_phone']) && $displayPhone !== '') {
+                            $companyMetaItems[] = 'Phone: ' . $displayPhone;
+                        }
+                        if (!empty($printOptions['show_company_email']) && !empty($businessSettings->email)) {
+                            $companyMetaItems[] = 'Email: ' . $businessSettings->email;
+                        }
+                        if (!empty($printOptions['show_company_bin']) && !empty($businessSettings->bin_number)) {
+                            $companyMetaItems[] = 'BIN: ' . $businessSettings->bin_number;
+                        }
+                    @endphp
+
+                    @if(!empty($companyMetaItems))
+                        {{ $companyMetaItems[0] }}
+                        @foreach(array_slice($companyMetaItems, 1) as $metaItem)
+                            <span>|</span> {{ $metaItem }}
+                        @endforeach
                     @endif
-                    @if(!empty($businessSettings->email))
-                        <span>|</span> Email: {{ $businessSettings->email }}
-                    @endif
-                    @if(!empty($businessSettings->address))
+
+                    @if(!empty($printOptions['show_company_address']) && !empty($businessSettings->address))
                         <br>{{ $businessSettings->address }}
-                    @endif
-                    @if(!empty($businessSettings->bin_number))
-                        <span>|</span> BIN: {{ $businessSettings->bin_number }}
                     @endif
                 </div>
             </div>
@@ -946,86 +991,93 @@
             </div>
         </div>
         
-        <div class="terms-bank">
-            <div class="bank-box">
-                <div class="bank-title">Bank Info</div>
-                @if($businessSettings->bank_details)
-                    {!! nl2br(e($businessSettings->bank_details)) !!}
-                @else
-                    Dutch Bangla Bank Ltd.<br>
-                    Shariatpur Branch (Routing: 090860678)<br>
-                    A/C Name: {{ $businessSettings->business_name ?? config('adminlte.title') }}<br>
-                    A/C No: 181 110 0000 282
+        @if(!empty($printOptions['show_bank_details']) || !empty($printOptions['show_terms']))
+            <div class="terms-bank {{ empty($printOptions['show_bank_details']) || empty($printOptions['show_terms']) ? 'terms-bank-single' : '' }}">
+                @if(!empty($printOptions['show_bank_details']))
+                    <div class="bank-box">
+                        <div class="bank-title">Bank Info</div>
+                        @if($businessSettings->bank_details)
+                            {!! nl2br(e($businessSettings->bank_details)) !!}
+                        @else
+                            Dutch Bangla Bank Ltd.<br>
+                            Shariatpur Branch (Routing: 090860678)<br>
+                            A/C Name: {{ $businessSettings->business_name ?? config('adminlte.title') }}<br>
+                            A/C No: 181 110 0000 282
+                        @endif
+                    </div>
                 @endif
-            </div>
-            <div class="terms-box">
-                <div class="terms-title">Terms &amp; Conditions</div>
-                @if($businessSettings->return_policy_message)
-                    {{ $businessSettings->return_policy_message }}
-                @else
-                    All sold goods should be returnable within {{ $businessSettings->return_policy_days ?? 90 }} days.
-                @endif
-                @if(!empty($businessSettings->footer_message))
-                    <div class="terms-footer">
-                        {{ $businessSettings->footer_message }}
+                @if(!empty($printOptions['show_terms']))
+                    <div class="terms-box">
+                        <div class="terms-title">Terms &amp; Conditions</div>
+                        @if($businessSettings->return_policy_message)
+                            {{ $businessSettings->return_policy_message }}
+                        @else
+                            All sold goods should be returnable within {{ $businessSettings->return_policy_days ?? 90 }} days.
+                        @endif
+                        @if(!empty($printOptions['show_footer_message']) && !empty($businessSettings->footer_message))
+                            <div class="terms-footer">
+                                {{ $businessSettings->footer_message }}
+                            </div>
+                        @endif
                     </div>
                 @endif
             </div>
-        </div>
-        
-        <div class="signatures">
-            <div class="signature-box">
-                <div class="signature-title">Customer</div>
-                <div style="font-size: 8px; margin-bottom: 8px;">{{ $invoice->customer->name }}</div>
-                <div class="signature-line"></div>
-                <div class="signature-label">Signature & Date</div>
-            </div>
-            <div class="signature-box">
-                <div class="signature-title">Authorized By</div>
-                <div style="font-size: 8px; margin-bottom: 8px;">{{ $businessSettings->business_name ?? config('adminlte.title') }}</div>
-                <div class="signature-line"></div>
-                <div class="signature-label">Signature & Date</div>
-            </div>
-        </div>
-        
-
-<!-- QR Code and Login Instructions -->
-
-<div class="qr-container">
-  <div class="qr-box">
-    <div style="margin-bottom: 10px;">
-        @if($invoice->customer)
-            @php
-                $settings = \App\Models\BusinessSetting::first();
-                $expiryDays = $settings?->customer_qr_expiry_days ?? 30;
-                $magicLink = \Illuminate\Support\Facades\URL::temporarySignedRoute(
-                    'customer.magic-login',
-                    now()->addDays($expiryDays),
-                    ['customer' => $invoice->customer->id, 'invoice' => $invoice->id]
-                );
-            @endphp
-            <img src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data={{ urlencode($magicLink) }}" alt="QR Code" style="width: 80px; height: 80px;">
-        @else
-            <p>QR code unavailable: Missing customer details.</p>
         @endif
-    </div>
-  </div>
-  <div class="qr-text">
-    <p><strong>Access Your Dashboard</strong></p>
-    <p>Scan the QR code or visit: <a href="{{ $magicLink ?? route('customer.login') }}" target="_blank">{{ route('customer.dashboard') }}</a></p>
-    @if($invoice->customer)
-        <p class="text-muted" style="margin-top: 6px;">
-            Default login: ID <strong>{{ $invoice->customer->id }}</strong>,
-            @if(!$invoice->customer->password)
-                Password <strong>{{ $invoice->customer->phone }}</strong>
-            @else
-                Password <strong>Your custom password</strong>
-            @endif
-        </p>
-    @endif
-    <p class="text-muted">This link signs you in securely and opens your invoice.</p>
-  </div>
-</div>
+        
+        @if(!empty($printOptions['show_signatures']))
+            <div class="signatures">
+                <div class="signature-box">
+                    <div class="signature-title">Customer</div>
+                    <div style="font-size: 8px; margin-bottom: 8px;">{{ $invoice->customer->name }}</div>
+                    <div class="signature-line"></div>
+                    <div class="signature-label">Signature & Date</div>
+                </div>
+                <div class="signature-box">
+                    <div class="signature-title">Authorized By</div>
+                    <div style="font-size: 8px; margin-bottom: 8px;">{{ $businessSettings->business_name ?? config('adminlte.title') }}</div>
+                    <div class="signature-line"></div>
+                    <div class="signature-label">Signature & Date</div>
+                </div>
+            </div>
+        @endif
+
+        @if(!empty($printOptions['show_customer_qr']))
+            <!-- QR Code and Login Instructions -->
+            <div class="qr-container">
+                <div class="qr-box">
+                    <div style="margin-bottom: 10px;">
+                        @if($invoice->customer)
+                            @php
+                                $expiryDays = $businessSettings?->customer_qr_expiry_days ?? 30;
+                                $magicLink = \Illuminate\Support\Facades\URL::temporarySignedRoute(
+                                    'customer.magic-login',
+                                    now()->addDays($expiryDays),
+                                    ['customer' => $invoice->customer->id, 'invoice' => $invoice->id]
+                                );
+                            @endphp
+                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data={{ urlencode($magicLink) }}" alt="QR Code" style="width: 80px; height: 80px;">
+                        @else
+                            <p>QR code unavailable: Missing customer details.</p>
+                        @endif
+                    </div>
+                </div>
+                <div class="qr-text">
+                    <p><strong>Access Your Dashboard</strong></p>
+                    <p>Scan the QR code or visit: <a href="{{ $magicLink ?? route('customer.login') }}" target="_blank">{{ route('customer.dashboard') }}</a></p>
+                    @if($invoice->customer)
+                        <p class="text-muted" style="margin-top: 6px;">
+                            Default login: ID <strong>{{ $invoice->customer->id }}</strong>,
+                            @if(!$invoice->customer->password)
+                                Password <strong>{{ $invoice->customer->phone }}</strong>
+                            @else
+                                Password <strong>Your custom password</strong>
+                            @endif
+                        </p>
+                    @endif
+                    <p class="text-muted">This link signs you in securely and opens your invoice.</p>
+                </div>
+            </div>
+        @endif
 
 
         <div class="print-actions no-print">
@@ -1039,10 +1091,14 @@
     </div>
     
     <script>
+        const isPreviewMode = {{ request()->boolean('preview') ? 'true' : 'false' }};
+
         window.onload = function() {
-            setTimeout(() => {
-                window.print();
-            }, 300);
+            if (!isPreviewMode) {
+                setTimeout(() => {
+                    window.print();
+                }, 300);
+            }
         };
         
         document.addEventListener('keydown', function(e) {

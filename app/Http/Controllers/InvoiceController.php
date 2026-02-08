@@ -1008,10 +1008,81 @@ public function destroy(Invoice $invoice)
         ], 500);
     }
 }
-    public function print(Invoice $invoice)
+    public function print(Request $request, Invoice $invoice)
     {
         $invoice->load(['customer', 'items.product.category', 'items.product.company']);
-        return view('invoices.print', compact('invoice'));
+
+        $allowedTemplates = array_keys($this->invoiceTemplateOptions());
+        $settings = app('business.settings');
+
+        $defaultTemplate = (string) ($settings->invoice_template ?? 'standard');
+        if (!in_array($defaultTemplate, $allowedTemplates, true)) {
+            $defaultTemplate = 'standard';
+        }
+
+        $selectedTemplate = (string) $request->query('template', $defaultTemplate);
+        if (!in_array($selectedTemplate, $allowedTemplates, true)) {
+            $selectedTemplate = $defaultTemplate;
+        }
+
+        $printOptions = array_merge(
+            $this->defaultInvoicePrintOptions(),
+            (array) ($settings->invoice_print_options ?? [])
+        );
+
+        if ($request->boolean('preview')) {
+            $booleanKeys = [
+                'show_company_phone',
+                'show_company_email',
+                'show_company_address',
+                'show_company_bin',
+                'show_bank_details',
+                'show_terms',
+                'show_footer_message',
+                'show_customer_qr',
+                'show_signatures',
+            ];
+
+            foreach ($booleanKeys as $key) {
+                if ($request->has($key)) {
+                    $printOptions[$key] = $request->boolean($key);
+                }
+            }
+
+            if ($request->has('invoice_phone_override')) {
+                $printOptions['invoice_phone_override'] = trim((string) $request->query('invoice_phone_override', ''));
+            }
+        }
+
+        return view('invoices.print', compact('invoice', 'selectedTemplate', 'printOptions'));
+    }
+
+    private function invoiceTemplateOptions(): array
+    {
+        return [
+            'standard' => 'Standard',
+            'modern' => 'Modern',
+            'simple' => 'Simple',
+            'bold' => 'Bold',
+            'elegant' => 'Elegant',
+            'imaginative' => 'Imaginative',
+        ];
+    }
+
+    private function defaultInvoicePrintOptions(): array
+    {
+        return [
+            'show_company_phone' => true,
+            'show_company_email' => true,
+            'show_company_address' => true,
+            'show_company_bin' => true,
+            'show_bank_details' => true,
+            'show_terms' => true,
+            'show_footer_message' => true,
+            'show_customer_qr' => true,
+            'show_signatures' => true,
+            'invoice_phone_override' => '',
+        ];
     }
 
 public function getProductDetails($id, Request $request)

@@ -269,4 +269,65 @@
     opacity: 0.95;
 }
 
+/* Final override: seamless app title strip + topbar */
+.main-header.navbar,
+.main-header.navbar.navbar-dark,
+.main-header.navbar.navbar-dark.navbar-primary,
+.main-sidebar .brand-link,
+.sidebar-dark-primary .brand-link {
+    background: var(--app-topbar, var(--app-primary, #667eea)) !important;
+    background-image: none !important;
+}
+
+.main-header.navbar,
+.main-header.navbar.navbar-dark,
+.main-header.navbar.navbar-dark.navbar-primary {
+    border-bottom: 0 !important;
+    box-shadow: none !important;
+    position: sticky;
+    top: 0;
+    z-index: 1055;
+}
+
+.brand-link,
+.main-sidebar .brand-link,
+.sidebar-dark-primary .brand-link {
+    border-bottom: 0 !important;
+    box-shadow: none !important;
+    position: relative;
+    overflow: visible !important;
+}
+
+.main-sidebar .brand-link {
+    min-height: 56px;
+    height: auto !important;
+    display: flex;
+    align-items: center;
+    padding-top: 7px;
+    padding-bottom: 7px;
+}
+
+.main-sidebar .brand-link .brand-text {
+    display: block;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    line-height: 1.15;
+    font-size: 0.84rem;
+    font-weight: 700 !important;
+    padding-right: 6px;
+}
+
+.main-sidebar,
+.sidebar-dark-primary {
+    border-right: 0 !important;
+}
+
+.main-header.navbar::after,
+.brand-link::after,
+.main-sidebar .brand-link::after {
+    content: none !important;
+    display: none !important;
+}
+
 </style>

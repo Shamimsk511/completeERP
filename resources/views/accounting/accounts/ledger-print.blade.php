@@ -1,3 +1,9 @@
+@php
+    $activePrintTemplate = $selectedTemplate ?? ($businessSettings->invoice_template ?? 'standard');
+    if (!in_array($activePrintTemplate, ['standard', 'modern', 'simple', 'bold', 'elegant', 'imaginative'], true)) {
+        $activePrintTemplate = 'standard';
+    }
+@endphp
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -575,8 +581,9 @@
             }
         }
     </style>
+    @include('partials.print-theme-styles')
 </head>
-<body>
+<body class="print-theme template-{{ $activePrintTemplate }}">
     @php
         $totalDebits = collect($ledger['entries'])->sum('debit');
         $totalCredits = collect($ledger['entries'])->sum('credit');
@@ -765,3 +772,4 @@
     </script>
 </body>
 </html>
+

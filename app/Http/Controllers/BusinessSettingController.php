@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\BusinessSetting;
+use App\Models\Invoice;
 use App\Models\Tenant;
 use App\Support\TenantContext;
 use Illuminate\Http\Request;
@@ -39,7 +40,23 @@ class BusinessSettingController extends Controller
         }
         $timezones = $this->getTimezoneList();
         $themes = $this->getThemeOptions();
-        return view('admin.settings.business', compact('settings', 'timezones', 'themes', 'tenantList', 'selectedTenantId'));
+        $invoiceTemplates = $this->getInvoiceTemplateOptions();
+        $invoicePrintOptions = array_merge(
+            $this->getDefaultInvoicePrintOptions(),
+            (array) ($settings->invoice_print_options ?? [])
+        );
+        $previewInvoiceId = Invoice::query()->latest('id')->value('id');
+
+        return view('admin.settings.business', compact(
+            'settings',
+            'timezones',
+            'themes',
+            'tenantList',
+            'selectedTenantId',
+            'invoiceTemplates',
+            'invoicePrintOptions',
+            'previewInvoiceId'
+        ));
     }
 
     /**
@@ -113,8 +130,37 @@ class BusinessSettingController extends Controller
         return config('themes', []);
     }
 
+    private function getInvoiceTemplateOptions(): array
+    {
+        return [
+            'standard' => 'Standard',
+            'modern' => 'Modern',
+            'simple' => 'Simple',
+            'bold' => 'Bold',
+            'elegant' => 'Elegant',
+            'imaginative' => 'Imaginative',
+        ];
+    }
+
+    private function getDefaultInvoicePrintOptions(): array
+    {
+        return [
+            'show_company_phone' => true,
+            'show_company_email' => true,
+            'show_company_address' => true,
+            'show_company_bin' => true,
+            'show_bank_details' => true,
+            'show_terms' => true,
+            'show_footer_message' => true,
+            'show_customer_qr' => true,
+            'show_signatures' => true,
+            'invoice_phone_override' => '',
+        ];
+    }
+
     public function update(Request $request)
 {
+    $invoiceTemplateKeys = implode(',', array_keys($this->getInvoiceTemplateOptions()));
     $rules = [
         'business_name' => 'required|string|max:255',
         'email' => 'nullable|email',
@@ -131,6 +177,18 @@ class BusinessSettingController extends Controller
         'theme' => 'nullable|string|in:' . implode(',', array_keys(config('themes', []))),
         'weekend_days' => 'nullable|array',
         'weekend_days.*' => 'string|in:Friday,Saturday,Sunday,Monday,Tuesday,Wednesday,Thursday',
+        'invoice_template' => 'nullable|string|in:' . $invoiceTemplateKeys,
+        'invoice_print_options' => 'nullable|array',
+        'invoice_print_options.show_company_phone' => 'nullable|boolean',
+        'invoice_print_options.show_company_email' => 'nullable|boolean',
+        'invoice_print_options.show_company_address' => 'nullable|boolean',
+        'invoice_print_options.show_company_bin' => 'nullable|boolean',
+        'invoice_print_options.show_bank_details' => 'nullable|boolean',
+        'invoice_print_options.show_terms' => 'nullable|boolean',
+        'invoice_print_options.show_footer_message' => 'nullable|boolean',
+        'invoice_print_options.show_customer_qr' => 'nullable|boolean',
+        'invoice_print_options.show_signatures' => 'nullable|boolean',
+        'invoice_print_options.invoice_phone_override' => 'nullable|string|max:255',
     ];
 
     if (auth()->user()?->hasRole('Super Admin')) {
@@ -157,6 +215,32 @@ class BusinessSettingController extends Controller
     $validated['customer_qr_expiry_days'] = $request->customer_qr_expiry_days ?? 30;
     $validated['theme'] = $request->theme ?? ($settings->theme ?? 'indigo');
     $validated['weekend_days'] = $request->weekend_days ?? ($settings->weekend_days ?? ['Friday']);
+    $validated['invoice_template'] = $request->invoice_template ?? ($settings->invoice_template ?? 'standard');
+
+    $booleanOptionKeys = [
+        'show_company_phone',
+        'show_company_email',
+        'show_company_address',
+        'show_company_bin',
+        'show_bank_details',
+        'show_terms',
+        'show_footer_message',
+        'show_customer_qr',
+        'show_signatures',
+    ];
+
+    $invoicePrintOptions = array_merge(
+        $this->getDefaultInvoicePrintOptions(),
+        (array) ($settings->invoice_print_options ?? []),
+        (array) $request->input('invoice_print_options', [])
+    );
+
+    foreach ($booleanOptionKeys as $key) {
+        $invoicePrintOptions[$key] = $request->boolean("invoice_print_options.$key");
+    }
+
+    $invoicePrintOptions['invoice_phone_override'] = trim((string) $request->input('invoice_print_options.invoice_phone_override', ''));
+    $validated['invoice_print_options'] = $invoicePrintOptions;
 
     // Handle logo upload
     if ($request->hasFile('logo')) {

@@ -1,9 +1,16 @@
 @extends('adminlte::page')
 
+@php
+    $activePrintTemplate = $selectedTemplate ?? ($businessSettings->invoice_template ?? 'standard');
+    if (!in_array($activePrintTemplate, ['standard', 'modern', 'simple', 'bold', 'elegant', 'imaginative'], true)) {
+        $activePrintTemplate = 'standard';
+    }
+@endphp
+
 @section('title', 'Print Return')
 
 @section('content')
-    <div class="container mt-4 print-container">
+    <div class="container mt-4 print-container print-theme template-{{ $activePrintTemplate }}">
         <div class="text-center mb-4">
             <h2>Return Receipt</h2>
         </div>
@@ -121,6 +128,7 @@
 @stop
 
 @section('css')
+    @include('partials.print-theme-styles')
     <style>
         @media print {
             body {
@@ -173,6 +181,7 @@
 @section('js')
     <script>
         $(document).ready(function() {
+            document.body.classList.add('print-theme', 'template-{{ $activePrintTemplate }}');
             // Auto-print when page loads
             // window.print();
         });

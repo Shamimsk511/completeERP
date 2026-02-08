@@ -1,3 +1,9 @@
+@php
+    $activePrintTemplate = $selectedTemplate ?? ($businessSettings->invoice_template ?? 'standard');
+    if (!in_array($activePrintTemplate, ['standard', 'modern', 'simple', 'bold', 'elegant', 'imaginative'], true)) {
+        $activePrintTemplate = 'standard';
+    }
+@endphp
 <!DOCTYPE html>
 <html>
 <head>
@@ -397,8 +403,9 @@
         .balance-summary { animation-delay: 0.2s; }
         .discount-note { animation-delay: 0.3s; }
     </style>
+    @include('partials.print-theme-styles')
 </head>
-<body>
+<body class="print-theme template-{{ $activePrintTemplate }}">
     @php
         // Calculate previous balance before this transaction
         $currentBalance = $transaction->customer->outstanding_balance;
@@ -546,3 +553,4 @@
     </div>
 </body>
 </html>
+

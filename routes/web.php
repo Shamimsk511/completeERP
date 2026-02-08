@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomepageController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\GlobalSearchController;
 use App\Http\Controllers\Api\CustomerSearchController;
 use App\Http\Controllers\EmployeeController;
 Route::get('/employee/{id}', [EmployeeController::class, 'show'])
@@ -22,6 +23,8 @@ require __DIR__.'/customer.php';
 // ADMIN ROUTES - Protected by admin auth
 Route::middleware(['auth:web', 'verified', 'feature', 'tenant'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/live', [DashboardController::class, 'live'])->name('dashboard.live');
+    Route::get('/global-search', GlobalSearchController::class)->name('global-search');
 
     Route::middleware('role:Super Admin')->group(function () {
         Route::resource('tenants', App\Http\Controllers\TenantController::class)

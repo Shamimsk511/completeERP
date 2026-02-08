@@ -15,11 +15,13 @@ class BusinessSetting extends Model
         'bin_number', 'logo', 'bank_details',
         'return_policy_days', 'return_policy_message',
         'footer_message', 'timezone', 'theme', 'weekend_days',
+        'invoice_template', 'invoice_print_options',
         'customer_qr_expiry_days'
     ];
 
     protected $casts = [
         'weekend_days' => 'array',
+        'invoice_print_options' => 'array',
     ];
     protected static function booted()
     {

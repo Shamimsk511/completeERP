@@ -20,6 +20,23 @@
                 @endif>
                 {{-- Configured sidebar links --}}
                 @each('adminlte::partials.sidebar.menu-item', $adminlte->menu('sidebar'), 'item')
+
+                <li class="nav-item sidebar-bottom-nav-item">
+                    <a class="nav-link"
+                       data-widget="pushmenu" href="#"
+                       @if(config('adminlte.sidebar_collapse_remember'))
+                           data-enable-remember="true"
+                       @endif
+                       @if(!config('adminlte.sidebar_collapse_remember_no_transition'))
+                           data-no-transition-after-reload="false"
+                       @endif
+                       @if(config('adminlte.sidebar_collapse_auto_size'))
+                           data-auto-collapse-size="{{ config('adminlte.sidebar_collapse_auto_size') }}"
+                       @endif>
+                        <i class="nav-icon fas fa-bars"></i>
+                        <p>Toggle Menu</p>
+                    </a>
+                </li>
             </ul>
         </nav>
     </div>
@@ -28,19 +45,21 @@
 <style>
     /* Modern Sidebar Styling */
 .main-sidebar {
-    background: linear-gradient(180deg, #667eea 0%, #764ba2 100%) !important;
+    background: linear-gradient(180deg, var(--app-primary, #667eea) 0%, var(--app-accent, #764ba2) 100%) !important;
     box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
 }
 
 /* Sidebar Brand */
 .brand-link {
-    background: rgba(255, 255, 255, 0.1) !important;
+    background: var(--app-topbar, var(--app-primary, #667eea)) !important;
+    background-image: var(--app-topbar-gradient, linear-gradient(135deg, var(--app-primary-dark, #1d4ed8), var(--app-primary, #3b82f6))) !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
-    color: white !important;
+    color: var(--app-sidebar-text, #ffffff) !important;
 }
 
 .brand-link:hover {
-    background: rgba(255, 255, 255, 0.15) !important;
+    background: var(--app-topbar, var(--app-primary, #667eea)) !important;
+    background-image: var(--app-topbar-gradient, linear-gradient(135deg, var(--app-primary-dark, #1d4ed8), var(--app-primary, #3b82f6))) !important;
     color: white !important;
 }
 
@@ -136,21 +155,82 @@
 .sidebar::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.5);
 }
+
+.main-sidebar .sidebar {
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - 57px);
+}
+
+.main-sidebar .sidebar > nav {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.main-sidebar .sidebar > nav > .nav-sidebar {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.sidebar-bottom-nav-item {
+    margin-top: auto !important;
+    position: sticky;
+    bottom: 0;
+    z-index: 4;
+    padding: 10px 0 6px;
+    background: linear-gradient(180deg, rgba(20, 26, 46, 0.0), rgba(20, 26, 46, 0.94) 28%, rgba(14, 21, 36, 0.97));
+}
+
+.sidebar-bottom-nav-item::before {
+    content: "";
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.24);
+}
+
+.sidebar-dark-primary .nav-sidebar > .nav-item.sidebar-bottom-nav-item > .nav-link {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    margin-top: 0.35rem;
+    margin-bottom: 0;
+    font-weight: 700;
+}
+
+.sidebar-dark-primary .nav-sidebar > .nav-item.sidebar-bottom-nav-item > .nav-link:hover {
+    background: rgba(255, 255, 255, 0.16) !important;
+    border-color: rgba(255, 255, 255, 0.34);
+    transform: none;
+}
+
+body.sidebar-mini.sidebar-collapse .sidebar-bottom-nav-item {
+    padding-top: 8px;
+    padding-bottom: 6px;
+}
 /* Modern Navbar with Gradient */
 .main-header.navbar {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    background: var(--app-topbar, var(--app-primary, #667eea)) !important;
+    background-image: var(--app-topbar-gradient, linear-gradient(135deg, var(--app-primary-dark, #1d4ed8), var(--app-primary, #3b82f6))) !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
     box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
 }
 .main-header .navbar-brand {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    background: transparent !important;
 }
 
 
 /* Navbar brand/logo area */
 .navbar-brand {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-    color: white !important;
+    background: transparent !important;
+    color: #fff !important;
 }
 
 .navbar-brand:hover {
@@ -221,17 +301,19 @@
 }
 
 .navbar .dropdown-item:hover {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--app-primary, #667eea) 0%, var(--app-accent, #764ba2) 100%);
     color: white;
 }
 
 .custom-brand-gradient {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    background: var(--app-topbar, var(--app-primary, #667eea)) !important;
+    background-image: var(--app-topbar-gradient, linear-gradient(135deg, var(--app-primary-dark, #1d4ed8), var(--app-primary, #3b82f6))) !important;
     color: white !important;
 }
 /* Fix the white brand area in top-left corner */
 .main-sidebar .brand-link {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    background: var(--app-topbar, var(--app-primary, #667eea)) !important;
+    background-image: var(--app-topbar-gradient, linear-gradient(135deg, var(--app-primary-dark, #1d4ed8), var(--app-primary, #3b82f6))) !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
 }
 
@@ -253,13 +335,76 @@
 
 /* Additional fix for the specific brand container */
 .sidebar-dark-primary .brand-link {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    background: var(--app-topbar, var(--app-primary, #667eea)) !important;
+    background-image: var(--app-topbar-gradient, linear-gradient(135deg, var(--app-primary-dark, #1d4ed8), var(--app-primary, #3b82f6))) !important;
     color: white !important;
 }
 
 .sidebar-dark-primary .brand-link:hover {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-    opacity: 0.9;
+    background: var(--app-topbar, var(--app-primary, #667eea)) !important;
+    background-image: var(--app-topbar-gradient, linear-gradient(135deg, var(--app-primary-dark, #1d4ed8), var(--app-primary, #3b82f6))) !important;
+    opacity: 0.95;
+}
+
+/* Final override: seamless app title strip + topbar */
+.main-header.navbar,
+.main-header.navbar.navbar-dark,
+.main-header.navbar.navbar-dark.navbar-primary,
+.main-sidebar .brand-link,
+.sidebar-dark-primary .brand-link {
+    background: var(--app-topbar, var(--app-primary, #667eea)) !important;
+    background-image: none !important;
+}
+
+.main-header.navbar,
+.main-header.navbar.navbar-dark,
+.main-header.navbar.navbar-dark.navbar-primary {
+    border-bottom: 0 !important;
+    box-shadow: none !important;
+    position: sticky;
+    top: 0;
+    z-index: 1055;
+}
+
+.brand-link,
+.main-sidebar .brand-link,
+.sidebar-dark-primary .brand-link {
+    border-bottom: 0 !important;
+    box-shadow: none !important;
+    position: relative;
+    overflow: visible !important;
+}
+
+.main-sidebar .brand-link {
+    min-height: 56px;
+    height: auto !important;
+    display: flex;
+    align-items: center;
+    padding-top: 7px;
+    padding-bottom: 7px;
+}
+
+.main-sidebar .brand-link .brand-text {
+    display: block;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    line-height: 1.15;
+    font-size: 0.84rem;
+    font-weight: 700 !important;
+    padding-right: 6px;
+}
+
+.main-sidebar,
+.sidebar-dark-primary {
+    border-right: 0 !important;
+}
+
+.main-header.navbar::after,
+.brand-link::after,
+.main-sidebar .brand-link::after {
+    content: none !important;
+    display: none !important;
 }
 
 </style>

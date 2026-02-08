@@ -1,3 +1,9 @@
+@php
+    $activePrintTemplate = $selectedTemplate ?? ($businessSettings->invoice_template ?? 'standard');
+    if (!in_array($activePrintTemplate, ['standard', 'modern', 'simple', 'bold', 'elegant', 'imaginative'], true)) {
+        $activePrintTemplate = 'standard';
+    }
+@endphp
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -150,8 +156,9 @@
             background: #4f46e5;
         }
     </style>
+    @include('partials.print-theme-styles')
 </head>
-<body>
+<body class="print-theme template-{{ $activePrintTemplate }}">
     <button class="print-btn no-print" onclick="window.print()">
         Print Count Sheet
     </button>
@@ -218,3 +225,4 @@
     </div>
 </body>
 </html>
+

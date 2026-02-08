@@ -1,3 +1,9 @@
+@php
+    $activePrintTemplate = $selectedTemplate ?? ($businessSettings->invoice_template ?? 'standard');
+    if (!in_array($activePrintTemplate, ['standard', 'modern', 'simple', 'bold', 'elegant', 'imaginative'], true)) {
+        $activePrintTemplate = 'standard';
+    }
+@endphp
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -150,8 +156,9 @@
     }
 </style>
 
+    @include('partials.print-theme-styles')
 </head>
-<body>
+<body class="print-theme template-{{ $activePrintTemplate }}">
     <div class="challan-container">
         <div class="challan-header">
             <div class="logo-container">
@@ -283,3 +290,4 @@
     </script>
 </body>
 </html>
+

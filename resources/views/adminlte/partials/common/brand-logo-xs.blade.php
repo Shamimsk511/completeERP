@@ -8,11 +8,24 @@
     @php( $dashboard_url = $dashboard_url ? url($dashboard_url) : '' )
 @endif
 
-<a href="{{ $dashboard_url }}"
+@php($isTopnavLayout = $layoutHelper->isLayoutTopnavEnabled())
+@php($brandHref = $isTopnavLayout ? $dashboard_url : '#')
+
+<a href="{{ $brandHref }}"
     @if($layoutHelper->isLayoutTopnavEnabled())
         class="navbar-brand {{ config('adminlte.classes_brand') }}"
     @else
         class="brand-link {{ config('adminlte.classes_brand') }}"
+        data-widget="pushmenu"
+        @if(config('adminlte.sidebar_collapse_remember'))
+            data-enable-remember="true"
+        @endif
+        @if(!config('adminlte.sidebar_collapse_remember_no_transition'))
+            data-no-transition-after-reload="false"
+        @endif
+        @if(config('adminlte.sidebar_collapse_auto_size'))
+            data-auto-collapse-size="{{ config('adminlte.sidebar_collapse_auto_size') }}"
+        @endif
     @endif>
 
     {{-- Small brand logo --}}

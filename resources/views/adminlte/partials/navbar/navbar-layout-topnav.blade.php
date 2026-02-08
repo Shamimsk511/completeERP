@@ -31,6 +31,10 @@
             </ul>
         </div>
 
+        <div class="order-2 d-none d-md-flex flex-grow-1 justify-content-center">
+            @include('adminlte::partials.navbar.global-search')
+        </div>
+
         {{-- Navbar right links --}}
         <ul class="navbar-nav ml-auto order-1 order-md-3 navbar-no-expand">
             {{-- Custom right links --}}

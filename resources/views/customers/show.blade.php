@@ -7,6 +7,9 @@
     <a class="btn modern-btn modern-btn-primary" href="{{ route('customers.ledger', $customer->id) }}">
         <i class="fas fa-book"></i> Customer Ledger
     </a>
+    <a class="btn modern-btn modern-btn-warning" href="{{ route('customers.edit', $customer->id) }}">
+        <i class="fas fa-edit"></i> Edit Customer
+    </a>
     <a class="btn modern-btn modern-btn-secondary" href="{{ route('customers.index') }}">
         <i class="fas fa-arrow-left"></i> Back to Customers
     </a>

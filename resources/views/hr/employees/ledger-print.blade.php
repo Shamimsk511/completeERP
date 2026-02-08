@@ -1,3 +1,9 @@
+@php
+    $activePrintTemplate = $selectedTemplate ?? ($businessSettings->invoice_template ?? 'standard');
+    if (!in_array($activePrintTemplate, ['standard', 'modern', 'simple', 'bold', 'elegant', 'imaginative'], true)) {
+        $activePrintTemplate = 'standard';
+    }
+@endphp
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -12,8 +18,9 @@
         th { background: #f5f5f5; }
         .text-right { text-align: right; }
     </style>
+    @include('partials.print-theme-styles')
 </head>
-<body>
+<body class="print-theme template-{{ $activePrintTemplate }}">
     <h2>{{ $employee->name }} Ledger</h2>
     <p>Period: {{ $fromDate }} to {{ $toDate }}</p>
 
@@ -66,3 +73,4 @@
     </table>
 </body>
 </html>
+

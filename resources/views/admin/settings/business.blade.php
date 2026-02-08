@@ -515,6 +515,141 @@
             </div>
         </div>
 
+        <!-- Invoice Template Studio -->
+        <div class="card modern-card mb-4">
+            <div class="card-header modern-header invoice-header">
+                <h3 class="card-title">
+                    <i class="fas fa-file-invoice"></i> Invoice Template Studio
+                </h3>
+            </div>
+            <div class="card-body modern-card-body">
+                <ul class="nav nav-tabs invoice-tabs" id="invoice-template-tabs" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="invoice-layout-tab" data-toggle="tab" href="#invoice-layout-pane" role="tab" aria-controls="invoice-layout-pane" aria-selected="true">
+                            Layout & Visibility
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="invoice-preview-tab" data-toggle="tab" href="#invoice-preview-pane" role="tab" aria-controls="invoice-preview-pane" aria-selected="false">
+                            Template Preview
+                        </a>
+                    </li>
+                </ul>
+
+                <div class="tab-content invoice-tab-content" id="invoice-template-tab-content">
+                    <div class="tab-pane fade show active" id="invoice-layout-pane" role="tabpanel" aria-labelledby="invoice-layout-tab">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group modern-form-group">
+                                    <label for="invoice_template" class="modern-label">Default Invoice Template</label>
+                                    <select name="invoice_template" id="invoice_template" class="form-control modern-select">
+                                        @foreach($invoiceTemplates as $key => $label)
+                                            <option value="{{ $key }}" {{ old('invoice_template', $settings->invoice_template ?? 'standard') === $key ? 'selected' : '' }}>
+                                                {{ $label }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <small class="text-muted d-block mt-2">
+                                        This becomes the default print style for invoice, challan, ledger, returns, and other printable pages.
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group modern-form-group">
+                                    <label for="invoice_phone_override" class="modern-label">Invoice Phone Override (Optional)</label>
+                                    <input type="text"
+                                           name="invoice_print_options[invoice_phone_override]"
+                                           id="invoice_phone_override"
+                                           class="form-control modern-input"
+                                           value="{{ old('invoice_print_options.invoice_phone_override', $invoicePrintOptions['invoice_phone_override'] ?? '') }}"
+                                           placeholder="Leave blank to use business phone">
+                                    <small class="text-muted d-block mt-2">
+                                        Only changes the phone shown on invoice prints. Main business phone stays unchanged.
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+
+                        @php
+                            $invoiceToggleItems = [
+                                'show_company_phone' => ['Company Phone', 'fas fa-phone'],
+                                'show_company_email' => ['Company Email', 'fas fa-envelope'],
+                                'show_company_address' => ['Company Address', 'fas fa-map-marker-alt'],
+                                'show_company_bin' => ['Company BIN', 'fas fa-id-card'],
+                                'show_bank_details' => ['Bank Details', 'fas fa-university'],
+                                'show_terms' => ['Terms & Conditions', 'fas fa-file-contract'],
+                                'show_footer_message' => ['Footer Message', 'fas fa-quote-right'],
+                                'show_customer_qr' => ['Customer QR Block', 'fas fa-qrcode'],
+                                'show_signatures' => ['Signature Section', 'fas fa-signature'],
+                            ];
+                            $truthyValues = [1, '1', true, 'true', 'on'];
+                        @endphp
+
+                        <div class="row">
+                            @foreach($invoiceToggleItems as $optionKey => [$optionLabel, $optionIcon])
+                                @php
+                                    $optionValue = old("invoice_print_options.$optionKey", data_get($invoicePrintOptions, $optionKey, true));
+                                    $isChecked = in_array($optionValue, $truthyValues, true);
+                                @endphp
+                                <div class="col-lg-4 col-md-6">
+                                    <div class="invoice-toggle-item">
+                                        <input type="hidden" name="invoice_print_options[{{ $optionKey }}]" value="0">
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox"
+                                                   class="custom-control-input invoice-toggle"
+                                                   id="{{ $optionKey }}"
+                                                   name="invoice_print_options[{{ $optionKey }}]"
+                                                   value="1"
+                                                   {{ $isChecked ? 'checked' : '' }}>
+                                            <label class="custom-control-label" for="{{ $optionKey }}">
+                                                <i class="{{ $optionIcon }}"></i> {{ $optionLabel }}
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="invoice-preview-pane" role="tabpanel" aria-labelledby="invoice-preview-tab">
+                        @if($previewInvoiceId)
+                            <div class="alert modern-alert modern-alert-info mb-3">
+                                <div class="alert-content">
+                                    <i class="fas fa-info-circle alert-icon"></i>
+                                    <div class="alert-message">
+                                        <strong>Preview Ready</strong>
+                                        <span>Templates open using your latest invoice in this tenant. Save to apply default system-wide.</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="template-preview-grid">
+                                @foreach($invoiceTemplates as $key => $label)
+                                    <button type="button" class="btn modern-btn modern-btn-secondary invoice-preview-btn" data-template="{{ $key }}">
+                                        <i class="fas fa-eye"></i> Preview {{ $label }}
+                                    </button>
+                                @endforeach
+                            </div>
+                            <div class="mt-3">
+                                <button type="button" class="btn modern-btn modern-btn-primary" id="preview-current-template">
+                                    <i class="fas fa-external-link-alt"></i> Preview Current Selection
+                                </button>
+                            </div>
+                        @else
+                            <div class="alert modern-alert modern-alert-error">
+                                <div class="alert-content">
+                                    <i class="fas fa-exclamation-triangle alert-icon"></i>
+                                    <div class="alert-message">
+                                        <strong>No Invoice Found</strong>
+                                        <span>Create at least one invoice to use live template preview.</span>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Submit Buttons -->
         <div class="text-center mt-4 mb-4">
             <button type="submit" class="btn modern-btn modern-btn-primary btn-lg" id="submit-btn">
@@ -760,6 +895,59 @@
 
         .theme-header {
             background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%);
+        }
+
+        .invoice-header {
+            background: linear-gradient(135deg, #0f766e 0%, #0ea5a4 100%);
+        }
+
+        .invoice-tabs {
+            border-bottom: 1px solid #e5e7eb;
+            margin-bottom: 16px;
+        }
+
+        .invoice-tabs .nav-link {
+            border: none;
+            color: #6b7280;
+            font-weight: 600;
+            border-radius: 10px 10px 0 0;
+            padding: 10px 14px;
+        }
+
+        .invoice-tabs .nav-link.active {
+            color: #0f766e;
+            background: rgba(15, 118, 110, 0.08);
+        }
+
+        .invoice-tab-content {
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 18px;
+            background: #ffffff;
+        }
+
+        .invoice-toggle-item {
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 10px 12px;
+            margin-bottom: 12px;
+            background: #f8fafc;
+        }
+
+        .invoice-toggle-item .custom-control-label {
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .invoice-toggle-item .custom-control-label i {
+            color: #0f766e;
+            margin-right: 6px;
+        }
+
+        .template-preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
         }
 
         /* Modern Select */
@@ -1414,6 +1602,67 @@
 
             $('input[name="theme"]').on('change', syncThemeSelection);
             syncThemeSelection();
+
+            const previewBaseUrl = @json($previewInvoiceId ? route('invoices.print', ['invoice' => $previewInvoiceId]) : null);
+            const invoicePreviewToggleKeys = [
+                'show_company_phone',
+                'show_company_email',
+                'show_company_address',
+                'show_company_bin',
+                'show_bank_details',
+                'show_terms',
+                'show_footer_message',
+                'show_customer_qr',
+                'show_signatures'
+            ];
+
+            function buildInvoicePreviewUrl(templateOverride) {
+                if (!previewBaseUrl) {
+                    return null;
+                }
+
+                const params = new URLSearchParams();
+                params.set('preview', '1');
+                params.set('template', templateOverride || $('#invoice_template').val() || 'standard');
+
+                invoicePreviewToggleKeys.forEach((key) => {
+                    const checkbox = document.getElementById(key);
+                    params.set(key, checkbox && checkbox.checked ? '1' : '0');
+                });
+
+                const phoneOverride = ($('#invoice_phone_override').val() || '').trim();
+                if (phoneOverride.length > 0) {
+                    params.set('invoice_phone_override', phoneOverride);
+                }
+
+                return `${previewBaseUrl}?${params.toString()}`;
+            }
+
+            window.previewInvoiceTemplate = function(templateOverride = null) {
+                const url = buildInvoicePreviewUrl(templateOverride);
+                if (!url) {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'No Invoice Found',
+                            text: 'Create at least one invoice to preview templates.'
+                        });
+                    } else {
+                        alert('Create at least one invoice to preview templates.');
+                    }
+                    return;
+                }
+                window.open(url, '_blank');
+            };
+
+            $('.invoice-preview-btn').on('click', function() {
+                const template = $(this).data('template');
+                window.previewInvoiceTemplate(template);
+            });
+
+            $('#preview-current-template').on('click', function() {
+                window.previewInvoiceTemplate();
+            });
         });
     </script>
 @stop
