@@ -142,8 +142,11 @@
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-6">
-                                <div class="form-group">
+                                <div class="form-group amount-group">
                                     <label for="amount">Amount <span class="required">*</span></label>
+                                    <span class="badge remaining-floating-badge remaining-zero debit-only" id="remaining-balance-label">
+                                        Remaining: <strong id="remaining-balance-value">৳0.00</strong>
+                                    </span>
                                     <div class="input-group">
                                         <div class="input-group-prepend">
                                             <span class="input-group-text modern-input-addon">৳</span>
@@ -174,6 +177,9 @@
                         <div class="d-flex flex-wrap gap-2 mb-3 debit-only">
                             <button type="button" class="btn modern-btn modern-btn-outline btn-sm" id="full-payment">
                                 <i class="fas fa-wallet"></i> Full Payment
+                            </button>
+                            <button type="button" class="btn modern-btn modern-btn-outline btn-sm" id="discount-from-remaining">
+                                <i class="fas fa-tag"></i> Discount?
                             </button>
                         </div>
 
@@ -258,6 +264,74 @@
     </form>
 @stop
 
+@section('additional_css')
+    <style>
+        .amount-group {
+            position: relative;
+        }
+
+        .remaining-floating-badge {
+            position: absolute;
+            top: 0;
+            right: 0;
+            transform: translateY(2px);
+            font-size: 11px;
+            padding: 0.35rem 0.55rem;
+            border-radius: 999px;
+            z-index: 2;
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .remaining-floating-badge.remaining-positive {
+            background: color-mix(in srgb, var(--app-primary, #4f46e5) 14%, #ffffff);
+            border-color: color-mix(in srgb, var(--app-primary, #4f46e5) 35%, #ffffff);
+            color: var(--app-primary-dark, #1f2937);
+        }
+
+        .remaining-floating-badge.remaining-zero {
+            background: color-mix(in srgb, #10b981 14%, #ffffff);
+            border-color: color-mix(in srgb, #10b981 35%, #ffffff);
+            color: #065f46;
+        }
+
+        .remaining-floating-badge.remaining-negative {
+            background: color-mix(in srgb, #ef4444 12%, #ffffff);
+            border-color: color-mix(in srgb, #ef4444 35%, #ffffff);
+            color: #991b1b;
+        }
+
+        @supports not (color: color-mix(in srgb, #000 50%, #fff)) {
+            .remaining-floating-badge.remaining-positive {
+                background: rgba(79, 70, 229, 0.14);
+                border-color: rgba(79, 70, 229, 0.35);
+                color: #1f2937;
+            }
+
+            .remaining-floating-badge.remaining-zero {
+                background: rgba(16, 185, 129, 0.14);
+                border-color: rgba(16, 185, 129, 0.35);
+                color: #065f46;
+            }
+
+            .remaining-floating-badge.remaining-negative {
+                background: rgba(239, 68, 68, 0.12);
+                border-color: rgba(239, 68, 68, 0.35);
+                color: #991b1b;
+            }
+        }
+
+        @media (max-width: 767.98px) {
+            .remaining-floating-badge {
+                position: static;
+                transform: none;
+                display: inline-block;
+                margin-bottom: 0.35rem;
+            }
+        }
+    </style>
+@stop
+
 @section('additional_js')
     <script>
         $(document).ready(function() {
@@ -285,11 +359,44 @@
             const $selectAllInvoices = $('#select-all-invoices');
             const $purpose = $('#purpose');
             const $amount = $('#amount');
+            const $discountAmount = $('#discount_amount');
+            const $remainingLabel = $('#remaining-balance-label');
+            const $remainingValue = $('#remaining-balance-value');
+            const $discountFromRemaining = $('#discount-from-remaining');
             const basePurpose = $purpose.val() || 'Customer Payment';
 
             let invoiceList = [];
             let selectedInvoices = new Map();
             let currentBalance = 0;
+
+            const getRemainingBalance = function() {
+                const balance = parseFloat(currentBalance) || 0;
+                const amountValue = parseFloat($amount.val()) || 0;
+                return balance - amountValue;
+            };
+
+            const updateRemainingBalanceDisplay = function() {
+                if ($('#type').val() !== 'debit') {
+                    $remainingLabel.hide();
+                    $discountFromRemaining.hide();
+                    return;
+                }
+
+                const remaining = getRemainingBalance();
+                const remainingForDiscount = Math.max(0, remaining);
+
+                $remainingLabel.show();
+                $discountFromRemaining.show();
+                $remainingValue.text(`৳${remaining.toFixed(2)}`);
+                $discountFromRemaining.prop('disabled', remainingForDiscount <= 0);
+
+                $remainingLabel
+                    .removeClass('remaining-positive remaining-zero remaining-negative')
+                    .addClass(
+                        remaining > 0 ? 'remaining-positive' :
+                        (remaining === 0 ? 'remaining-zero' : 'remaining-negative')
+                    );
+            };
 
             const clearCustomerInfo = function() {
                 $phone.val('');
@@ -301,6 +408,8 @@
             const loadCustomerDetails = function(customerId) {
                 if (!customerId) {
                     clearCustomerInfo();
+                    currentBalance = 0;
+                    updateRemainingBalanceDisplay();
                     return;
                 }
 
@@ -310,11 +419,14 @@
                         const balanceDisplay = data.ledger_balance_formatted || data.outstanding_balance || '0.00';
                         $balance.val(balanceDisplay);
                         currentBalance = parseFloat(data.ledger_balance ?? data.outstanding_balance ?? 0) || 0;
+                        updateRemainingBalanceDisplay();
                         $ledgerLink.attr('href', ledgerUrlTemplate.replace('/0/ledger', `/${customerId}/ledger`));
                         $ledgerWrap.show();
                     })
                     .fail(function() {
                         clearCustomerInfo();
+                        currentBalance = 0;
+                        updateRemainingBalanceDisplay();
                     });
             };
 
@@ -347,6 +459,7 @@
                     $invoice.val('');
                     $amount.val('');
                     $purpose.val(basePurpose);
+                    updateRemainingBalanceDisplay();
                     return;
                 }
 
@@ -361,6 +474,8 @@
                     $invoice.val('');
                     $purpose.val(`Payment for Invoices: ${numbers.join(', ')}`);
                 }
+
+                updateRemainingBalanceDisplay();
             };
 
             const clearInvoiceSelection = function() {
@@ -445,6 +560,7 @@
                     $('#discount_reason').val('');
                     clearInvoiceSelection();
                 }
+                updateRemainingBalanceDisplay();
             };
 
             $customer.on('change', function() {
@@ -453,6 +569,7 @@
                 loadInvoices(customerId);
                 $purpose.val(basePurpose);
                 $amount.val('');
+                updateRemainingBalanceDisplay();
             });
 
             $('#type').on('change', function() {
@@ -501,6 +618,19 @@
                     $amount.val('0.00');
                     $purpose.val(basePurpose);
                 }
+                updateRemainingBalanceDisplay();
+            });
+
+            $amount.on('input change', function() {
+                updateRemainingBalanceDisplay();
+            });
+
+            $discountFromRemaining.on('click', function() {
+                if ($('#type').val() !== 'debit') {
+                    return;
+                }
+                const remainingForDiscount = Math.max(0, getRemainingBalance());
+                $discountAmount.val(remainingForDiscount.toFixed(2)).trigger('change');
             });
 
             const initialCustomerId = $customer.val();
@@ -510,6 +640,7 @@
             }
 
             toggleDebitFields();
+            updateRemainingBalanceDisplay();
         });
     </script>
 @stop
