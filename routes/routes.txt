@@ -1,0 +1,380 @@
+
+--- Contents of auth.php ---
+<?php
+
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Auth\ConfirmablePasswordController;
+use App\Http\Controllers\Auth\EmailVerificationNotificationController;
+use App\Http\Controllers\Auth\EmailVerificationPromptController;
+use App\Http\Controllers\Auth\NewPasswordController;
+use App\Http\Controllers\Auth\PasswordController;
+use App\Http\Controllers\Auth\PasswordResetLinkController;
+use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\Auth\VerifyEmailController;
+use Illuminate\Support\Facades\Route;
+
+Route::middleware('guest')->group(function () {
+    Route::get('register', [RegisteredUserController::class, 'create'])
+        ->name('register');
+
+    Route::post('register', [RegisteredUserController::class, 'store']);
+
+    Route::get('login', [AuthenticatedSessionController::class, 'create'])
+        ->name('login');
+
+    Route::post('login', [AuthenticatedSessionController::class, 'store']);
+
+    Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])
+        ->name('password.request');
+
+    Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])
+        ->name('password.email');
+
+    Route::get('reset-password/{token}', [NewPasswordController::class, 'create'])
+        ->name('password.reset');
+
+    Route::post('reset-password', [NewPasswordController::class, 'store'])
+        ->name('password.store');
+});
+
+Route::middleware('auth')->group(function () {
+    Route::get('verify-email', EmailVerificationPromptController::class)
+        ->name('verification.notice');
+
+    Route::get('verify-email/{id}/{hash}', VerifyEmailController::class)
+        ->middleware(['signed', 'throttle:6,1'])
+        ->name('verification.verify');
+
+    Route::post('email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
+        ->middleware('throttle:6,1')
+        ->name('verification.send');
+
+    Route::get('confirm-password', [ConfirmablePasswordController::class, 'show'])
+        ->name('password.confirm');
+
+    Route::post('confirm-password', [ConfirmablePasswordController::class, 'store']);
+
+    Route::put('password', [PasswordController::class, 'update'])->name('password.update');
+
+    Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
+        ->name('logout');
+});
+
+
+--- Contents of console.php ---
+<?php
+
+use Illuminate\Foundation\Inspiring;
+use Illuminate\Support\Facades\Artisan;
+
+Artisan::command('inspire', function () {
+    $this->comment(Inspiring::quote());
+})->purpose('Display an inspiring quote');
+
+
+--- Contents of web.php ---
+<?php
+
+use App\Models\Company;
+use App\Models\Category;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\RoleController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\PayeeController;
+use App\Http\Controllers\ChallanController;
+use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\PurchaseController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ColorentApiController;
+use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\CashRegisterController;
+use App\Http\Controllers\OtherDeliveryController;
+use App\Http\Controllers\ProductReportController;
+use App\Http\Controllers\ProductReturnController;
+use App\Http\Controllers\DebtCollectionController;
+use App\Http\Controllers\BusinessSettingController;
+use App\Http\Controllers\DecorCalculatorController;
+use App\Http\Controllers\RemainingProductsController;
+use App\Http\Controllers\Admin\TilesSettingController;
+use App\Http\Controllers\ColorentManagementController;
+use App\Http\Controllers\PayableTransactionController;
+use App\Http\Controllers\Admin\TilesCategoryController;
+use App\Http\Controllers\OtherDeliveryReturnController;
+
+    //this routes get normal user to the login screen
+    Route::get('/', function () {
+        return redirect()->route('dashboard');
+    });
+
+    Route::middleware(['auth'])->group(function () {
+
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    
+    Route::resource('roles', RoleController::class);
+    Route::resource('users', UserController::class);
+
+    // Update the AdminLTE menu links
+    Route::get('/settings/users', function() {
+        return redirect()->route('users.index');
+    })->name('settings.users');
+    
+    Route::get('/settings/roles', function() {
+        return redirect()->route('roles.index');
+    })->name('settings.roles');
+
+
+
+    // Customer import/export routes
+    Route::get('customers/import', [App\Http\Controllers\CustomerController::class, 'importForm'])->name('customers.import.form');
+    Route::post('customers/import', [App\Http\Controllers\CustomerController::class, 'import'])->name('customers.import');
+    Route::get('customers/export/template', [App\Http\Controllers\CustomerController::class, 'exportTemplate'])->name('customers.export.template');
+Route::get('customers/export', [CustomerController::class, 'export'])->name('customers.export');
+
+    //customers route
+    Route::get('customers/get-customers', [CustomerController::class, 'getCustomers'])->name('customers.getCustomers');
+    Route::resource('customers', CustomerController::class);
+
+    //categories route
+    Route::resource('categories', CategoryController::class);
+
+    //Transaciton route
+    Route::resource('transactions', TransactionController::class);
+    Route::get('customer/{customer}/ledger',[TransactionController::class, 'customerLedger'])->name('customer.ledger');
+    Route::get('/transactions/{transaction}/print', function (App\Models\Transaction $transaction) {
+        return view('transactions/transaction-print', compact('transaction'));
+    })->name('transactions.print');
+    Route::get('customers/search', [TransactionController::class, 'searchCustomers'])->name('customers.search');
+Route::get('customers/{customer}/invoices', [TransactionController::class, 'getCustomerInvoices']);
+
+Route::get('/customers/{customer}/ledger/print', [TransactionController::class, 'printCustomerLedger'])->name('customers.ledger.print');
+
+
+   //company route 
+    Route::resource('companies', CompanyController::class);
+
+    //product route
+    Route::get('products/get-products', [ProductController::class, 'getProducts'])->name('products.getProducts');
+    Route::resource('products', ProductController::class);
+    //Product imports
+    Route::post('products/import', [ProductController::class, 'import'])->name('products.import');
+    Route::get('products/template/download', [ProductController::class, 'downloadTemplate'])->name('products.template.download');
+
+
+    // Invoice routes
+
+    Route::post('/invoices/{invoice}/mark-as-paid', [App\Http\Controllers\InvoiceController::class, 'markAsPaid'])
+    ->name('invoices.mark.as.paid');
+    Route::get('invoices/data', [InvoiceController::class, 'dataTable'])->name('invoices.data');
+    Route::get('invoices/summary', [InvoiceController::class, 'getSummary'])->name('invoices.summary');
+
+    Route::get('invoices/export', [App\Http\Controllers\InvoiceController::class, 'export'])->name('invoices.export');
+    Route::get('/invoices/create-other', [InvoiceController::class, 'createOther'])->name('invoices.create-other'); 
+    Route::resource('invoices', InvoiceController::class);
+    Route::get('invoices/{invoice}/print', [InvoiceController::class, 'print'])->name('invoices.print');
+    Route::get('product-details/{id}', [InvoiceController::class, 'getProductDetails'])->name('product.details');
+    Route::get('customer-details/{id}', [InvoiceController::class, 'getCustomerDetails'])->name('customer.details');
+    Route::post('invoices/update-status', [App\Http\Controllers\InvoiceController::class, 'updateStatus'])->name('invoices.update.status');
+    Route::post('/invoices/update-delivery-status', [App\Http\Controllers\InvoiceController::class, 'updateDeliveryStatus'])->name('invoices.update-delivery-status');
+Route::get('/invoices/statistics', [InvoiceController::class, 'getStatistics'])->name('invoices.statistics');
+
+// Route::get('/invoices/create', function () {
+//     $companies = Company::orderBy('name')->get();
+//     $categories = Category::orderBy('name')->get();
+//     // ...other variables
+//     return view('invoices.create', compact('companies', 'categories', /* ... */));});
+
+    // Product Return routes
+    Route::resource('returns', ProductReturnController::class);
+    Route::get('returns/{return}/print', [ProductReturnController::class, 'print'])->name('returns.print');
+    Route::get('customer-invoices/{customerId}', [ProductReturnController::class, 'getInvoicesByCustomer']);
+    Route::get('invoice-items/{invoiceId}', [ProductReturnController::class, 'getInvoiceItems']);
+
+
+    // Purchase Module Routes
+    Route::resource('purchases', PurchaseController::class);
+    Route::post('purchases/create-product', [PurchaseController::class, 'createProduct'])->name('purchases.createProduct');
+
+    // Challan routes
+    Route::resource('challans', ChallanController::class);
+    Route::get('challan-print/{challan}', [ChallanController::class, 'print'])->name('challans.print');
+    Route::post('challans/{challan}/update-status', [ChallanController::class, 'updateStatus'])->name('challans.update-status');
+    Route::get('get-invoice-items/{invoice}', [ChallanController::class, 'getInvoiceItems'])->name('get-invoice-items');
+    Route::post('/challans/{challan}/update-status', [ChallanController::class, 'updateStatus'])->name('challans.update-status');
+    
+    Route::get('challans/{challan}/status/{status}', [App\Http\Controllers\ChallanController::class, 'updateStatus'])->name('challans.updateStatus');
+
+
+    Route::resource('other-deliveries', OtherDeliveryController::class);
+    Route::get('other-deliveries/{otherDelivery}/print', [OtherDeliveryController::class, 'print'])->name('other-deliveries.print');
+    Route::patch('other-deliveries/{otherDelivery}/update-status', [OtherDeliveryController::class, 'updateStatus'])->name('other-deliveries.update-status');
+
+    Route::prefix('reports')->name('reports.')->group(function () {
+        
+        Route::get('/products', [ProductReportController::class, 'index'])->name('products.index');
+        Route::get('/products/sales', [ProductReportController::class, 'salesReport'])->name('products.sales');
+        Route::get('/products/returns', [ProductReportController::class, 'returnsReport'])->name('products.returns');
+        Route::get('/products/purchases', [ProductReportController::class, 'purchasesReport'])->name('products.purchases');
+        Route::get('/products/other-deliveries', [ProductReportController::class, 'otherDeliveriesReport'])->name('products.other-deliveries');
+        Route::get('/products/consolidated', [ProductReportController::class, 'consolidatedReport'])->name('products.consolidated');
+        // Add these detail routes for AJAX requests
+        Route::get('/reports/products/sales/details', [ProductReportController::class, 'getProductSaleDetails'])->name('reports.products.sales.details');
+        Route::get('/reports/products/returns/details', [ProductReportController::class, 'getProductReturnDetails'])->name('reports.products.returns.details');
+        Route::get('/reports/products/purchases/details', [ProductReportController::class, 'getProductPurchaseDetails'])->name('reports.products.purchases.details');
+        Route::get('/reports/products/other-deliveries/details', [ProductReportController::class, 'getProductDeliveryDetails'])->name('reports.products.other-deliveries.details');
+
+
+        Route::prefix('reports')->name('reports.')->group(function () {
+        // Existing routes...
+        
+            // Detail routes for AJAX
+            Route::get('/products/sales/details', [ProductReportController::class, 'getProductSaleDetails'])->name('products.sales.details');
+            Route::get('/products/returns/details', [ProductReportController::class, 'getProductReturnDetails'])->name('products.returns.details');
+            Route::get('/products/purchases/details', [ProductReportController::class, 'getProductPurchaseDetails'])->name('products.purchases.details');
+            Route::get('/products/other-deliveries/details', [ProductReportController::class, 'getProductDeliveryDetails'])->name('products.other-deliveries.details');
+        });
+});
+
+Route::get('/customers/{customer}/invoices', [TransactionController::class, 'getCustomerInvoices']);
+
+
+    Route::get('customers/{customer}/ledger/print', [CustomerController::class, 'printLedger'])->name('customers.ledger.print');
+
+    Route::get('sales/remaining-products', [RemainingProductsController::class, 'index'])->name('sales.remaining_products');
+    Route::get('sales/remaining-products/pending-challans', [RemainingProductsController::class, 'getPendingChallansData'])->name('sales.pending_challans.data');
+    Route::get('sales/remaining-products/undelivered-items', [RemainingProductsController::class, 'getUndeliveredItemsData'])->name('sales.undelivered_items.data');
+
+    Route::get('/business-settings', [App\Http\Controllers\BusinessSettingController::class, 'index'])
+        ->name('business-settings.index');
+    Route::put('/business-settings', [BusinessSettingController::class, 'update'])->name('business-settings.update');   
+
+// Debt Collection Routes
+    Route::prefix('debt-collection')->name('debt-collection.')->group(function () {
+    Route::get('/', [DebtCollectionController::class, 'index'])->name('index');
+    Route::get('/get-customers', [DebtCollectionController::class, 'getCustomersWithOutstanding'])->name('get-customers');
+    Route::post('/update-due-date/{customerId}', [DebtCollectionController::class, 'updateDueDate'])->name('update-due-date');
+    Route::post('/update-last-call-date/{customerId}', [DebtCollectionController::class, 'updateLastCallDate'])->name('update-last-call-date');
+    Route::post('/log-call/{customerId}', [DebtCollectionController::class, 'logCall'])->name('log-call');
+    Route::post('/log-missed-call/{customerId}', [DebtCollectionController::class, 'logMissedCall'])->name('log-missed-call');
+    Route::get('/edit-tracking/{customerId}', [DebtCollectionController::class, 'editTracking'])->name('edit-tracking');
+    Route::put('/update-tracking/{customerId}', [DebtCollectionController::class, 'updateTracking'])->name('update-tracking');
+    Route::get('/due-today', [DebtCollectionController::class, 'dueToday'])->name('due-today');
+    Route::get('/due-this-week', [DebtCollectionController::class, 'dueThisWeek'])->name('due-this-week');
+    Route::get('/call-history/{customerId}', [DebtCollectionController::class, 'callHistory'])->name('call-history');
+
+    Route::get('/dashboard', [DebtCollectionController::class, 'dashboard'])->name('dashboard');
+    Route::get('/customer-payment-history/{customerId}', [DebtCollectionController::class, 'customerPaymentHistory'])->name('customer-payment-history');
+    Route::get('/call-schedule', [DebtCollectionController::class, 'callSchedule'])->name('call-schedule');
+    Route::get('/overdue-accounts', [DebtCollectionController::class, 'overdueAccounts'])->name('overdue-accounts');
+    Route::get('/performance', [DebtCollectionController::class, 'performance'])->name('performance');
+    Route::post('/schedule-call', [DebtCollectionController::class, 'scheduleCall'])->name('schedule-call');
+    Route::get('/get-schedule-events', [DebtCollectionController::class, 'getScheduleEvents'])->name('get-schedule-events');
+
+    Route::get('/get-performance-data', [DebtCollectionController::class, 'getPerformanceData'])->name('get-performance-data');
+    Route::get('/export-overdue', [DebtCollectionController::class, 'exportOverdueAccounts'])->name('export-overdue');
+
+    Route::get('debt-collection/get-overdue', 'App\Http\Controllers\DebtCollectionController@getOverdue')->name('debt-collection.get-overdue');
+    Route::get('/get-overdue', [DebtCollectionController::class, 'getOverdueAccounts'])->name('get-overdue');
+    });
+
+// Payable Management System Routes
+    Route::prefix('payables')->group(function () {
+    // Payees
+    Route::get('/payees', [App\Http\Controllers\PayeeController::class, 'index'])->name('payees.index');
+    Route::get('/payees/create', [App\Http\Controllers\PayeeController::class, 'create'])->name('payees.create');
+    Route::post('/payees', [App\Http\Controllers\PayeeController::class, 'store'])->name('payees.store');
+    Route::get('/payees/{payee}', [App\Http\Controllers\PayeeController::class, 'show'])->name('payees.show');
+    Route::get('/payees/{payee}/edit', [App\Http\Controllers\PayeeController::class, 'edit'])->name('payees.edit');
+    Route::put('/payees/{payee}', [App\Http\Controllers\PayeeController::class, 'update'])->name('payees.update');
+    Route::delete('/payees/{payee}', [App\Http\Controllers\PayeeController::class, 'destroy'])->name('payees.destroy');
+    Route::get('/payees/{payee}/ledger', [App\Http\Controllers\PayeeController::class, 'ledger'])->name('payees.ledger');
+    Route::get('/payees/{payee}/print-ledger', [App\Http\Controllers\PayeeController::class, 'printLedger'])->name('payees.print-ledger');
+    
+    // Payable Transactions
+    Route::get('/transactions', [App\Http\Controllers\PayableTransactionController::class, 'index'])->name('payable-transactions.index');
+    Route::get('/transactions/create', [App\Http\Controllers\PayableTransactionController::class, 'create'])->name('payable-transactions.create');
+    Route::post('/transactions', [App\Http\Controllers\PayableTransactionController::class, 'store'])->name('payable-transactions.store');
+    Route::get('/transactions/{payableTransaction}/edit', [App\Http\Controllers\PayableTransactionController::class, 'edit'])->name('payable-transactions.edit');
+    Route::put('/transactions/{payableTransaction}', [App\Http\Controllers\PayableTransactionController::class, 'update'])->name('payable-transactions.update');
+    Route::delete('/transactions/{payableTransaction}', [App\Http\Controllers\PayableTransactionController::class, 'destroy'])->name('payable-transactions.destroy');
+
+});
+
+
+    // Aging Reports
+    Route::get('/payables/reports/aging', [App\Http\Controllers\PayeeController::class, 'agingReport'])->name('payables.reports.aging');
+    Route::get('/payables/reports/detailed-aging', [App\Http\Controllers\PayeeController::class, 'detailedAgingReport'])->name('payables.reports.detailed-aging');
+
+
+    // Cash Register Routes
+    Route::middleware(['auth'])->group(function () {
+    Route::get('cash-registers', [CashRegisterController::class, 'index'])->name('cash-registers.index');
+    Route::get('cash-registers/open', [CashRegisterController::class, 'open'])->name('cash-registers.open');
+    Route::post('cash-registers', [CashRegisterController::class, 'store'])->name('cash-registers.store');
+    Route::get('cash-registers/{cashRegister}', [CashRegisterController::class, 'show'])->name('cash-registers.show');
+    Route::post('cash-registers/{cashRegister}/add-transaction', [CashRegisterController::class, 'addTransaction'])->name('cash-registers.add-transaction');
+    Route::get('cash-registers/{cashRegister}/close', [CashRegisterController::class, 'close'])->name('cash-registers.close');
+    Route::post('cash-registers/{cashRegister}/process-close', [CashRegisterController::class, 'processClose'])->name('cash-registers.process-close');
+    Route::get('cash-registers-report', [CashRegisterController::class, 'report'])->name('cash-registers.report');
+});
+
+// Decor Calculator Routes
+    Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {
+    // Decor Calculator Routes
+    Route::prefix('decor-calculator')->name('decor-calculator.')->group(function () {
+    Route::get('/categories', [DecorCalculatorController::class, 'getCategories'])->name('categories');
+    Route::get('/settings/{categoryId}', [DecorCalculatorController::class, 'getSettings'])->name('settings.show');
+    Route::post('/calculate', [DecorCalculatorController::class, 'calculate'])->name('calculate');
+    Route::post('/settings', [DecorCalculatorController::class, 'saveSettings'])->name('settings.save');
+    Route::get('/component', [DecorCalculatorController::class, 'getComponent'])->name('component');
+ 
+    });
+    
+    // Tiles Categories Management
+    Route::resource('tiles-categories', TilesCategoryController::class);
+    Route::post('tiles-categories/{tilesCategory}/settings', [TilesCategoryController::class, 'saveSettings'])
+        ->name('tiles-categories.settings');
+               // Tiles Settings Management
+    Route::resource('tiles-settings', TilesSettingController::class);
+
+    // Decor Calculator as a full page
+    Route::get('/decor-calculator', [DecorCalculatorController::class, 'index'])->name('admin.decor-calculator.index');
+});
+
+Route::resource('other-delivery-returns', OtherDeliveryReturnController::class);
+    Route::get('other-delivery-returns/{otherDeliveryReturn}/print', [OtherDeliveryReturnController::class, 'print'])->name('other-delivery-returns.print');
+    Route::patch('other-delivery-returns/{otherDeliveryReturn}/update-status', [OtherDeliveryReturnController::class, 'updateStatus'])->name('other-delivery-returns.update-status');
+
+
+Route::get('/colorents/management', [ColorentManagementController::class, 'index'])
+    ->name('colorents.management');
+Route::post('/colorents/{id}/update-stock', [ColorentManagementController::class, 'updateStock'])
+    ->name('colorents.updateStock');
+Route::post('/colorents/{id}/update-price', [ColorentManagementController::class, 'updatePrice'])
+    ->name('colorents.updatePrice');
+
+    
+});
+
+
+    Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+});
+
+require __DIR__.'/auth.php';
+
+Auth::routes([
+    'reset' => false, // Disable password reset routes
+    'confirm' => false,
+]);
+
+
+

@@ -1,0 +1,522 @@
+/* Theme overrides for AdminLTE using CSS variables (set in master layout) */
+:root {
+    --app-topbar: var(--app-primary-dark, var(--app-primary));
+    --app-topbar-gradient: var(--app-topbar-gradient, linear-gradient(135deg, var(--app-primary-dark, #1d4ed8), var(--app-primary, #3b82f6)));
+}
+.main-header.navbar,
+.main-header.navbar.navbar-dark.navbar-primary,
+.main-header.navbar.navbar-dark {
+    background: var(--app-topbar) !important;
+    background-image: var(--app-topbar-gradient) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 0 !important;
+    position: relative;
+    overflow: hidden;
+    position: sticky;
+    top: 0;
+    z-index: 1055;
+}
+
+.main-header.navbar::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(120px 120px at 12% 0%, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0));
+    opacity: 0.8;
+    pointer-events: none;
+}
+
+.navbar-dark .navbar-nav .nav-link,
+.navbar-dark .navbar-brand,
+.navbar-dark .nav-link {
+    color: #ffffff !important;
+}
+
+.navbar-dark .navbar-nav .nav-link:hover {
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.main-sidebar,
+.sidebar-dark-primary {
+    background: linear-gradient(180deg, var(--app-primary) 0%, var(--app-accent, #764ba2) 100%) !important;
+}
+
+.brand-link,
+.main-sidebar .brand-link,
+.sidebar-dark-primary .brand-link {
+    background: var(--app-topbar) !important;
+    background-image: var(--app-topbar-gradient) !important;
+    color: #ffffff !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 0 !important;
+    position: relative;
+    overflow: hidden;
+}
+
+.brand-link::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0));
+    pointer-events: none;
+}
+
+.brand-link .brand-text {
+    color: #ffffff !important;
+}
+
+.sidebar-dark-primary .nav-sidebar > .nav-item > .nav-link.active {
+    background-color: rgba(255, 255, 255, 0.12) !important;
+    color: #ffffff !important;
+}
+
+.navbar-primary {
+    background-color: var(--app-topbar) !important;
+    background-image: var(--app-topbar-gradient) !important;
+}
+
+/* Theme-wide card and table titles */
+.card-header {
+    background-color: var(--app-primary) !important;
+    background-image: var(--app-topbar-gradient) !important;
+    color: #ffffff !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+.card-header .card-title,
+.card-header h1,
+.card-header h2,
+.card-header h3,
+.card-header h4,
+.card-header h5,
+.card-header h6,
+.card-header a {
+    color: #ffffff !important;
+}
+
+.card-header .btn,
+.card-header .btn-link {
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.35) !important;
+}
+
+.card-header .form-control,
+.card-header .custom-select,
+.card-header .select2-container--default .select2-selection--single {
+    background: rgba(255, 255, 255, 0.14) !important;
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.35) !important;
+}
+
+.card-header .form-control::placeholder {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.table thead th {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.6));
+    color: var(--app-text, #0f172a);
+    border-bottom: 2px solid rgba(0, 0, 0, 0.05);
+}
+
+.modern-thead th,
+.modern-table thead th {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.62)) !important;
+    color: var(--app-primary-dark, #1f2937) !important;
+    border-bottom: 2px solid rgba(0, 0, 0, 0.06) !important;
+}
+
+.modern-thead th .th-content,
+.modern-table thead th .th-content,
+.modern-thead .th-content,
+.modern-table .th-content {
+    color: var(--app-primary-dark, #1f2937) !important;
+}
+
+.modern-thead th .th-content i,
+.modern-table thead th .th-content i {
+    color: var(--app-primary, #4f46e5) !important;
+}
+
+.modern-tfoot,
+.modern-table tfoot {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.7)) !important;
+    color: var(--app-text, #0f172a) !important;
+    border-top: 2px solid rgba(0, 0, 0, 0.06) !important;
+}
+
+.modern-tfoot td,
+.modern-table tfoot td {
+    color: var(--app-text, #0f172a) !important;
+}
+
+/* Totals highlight cells */
+#total-quantity,
+#total-boxes,
+#total-pieces {
+    background: var(--app-topbar-gradient, linear-gradient(135deg, var(--app-primary-dark, #1d4ed8), var(--app-primary, #3b82f6))) !important;
+    color: #ffffff !important;
+    border-radius: 8px;
+    padding: 6px 12px;
+    display: inline-block;
+}
+
+/* Ensure modern primary buttons always match theme */
+.btn.modern-btn.modern-btn-primary,
+.modern-btn.modern-btn-primary,
+.modern-btn-primary {
+    background: var(--app-topbar) !important;
+    background-image: var(--app-topbar-gradient, linear-gradient(135deg, var(--app-primary-dark, #1d4ed8), var(--app-primary, #3b82f6))) !important;
+    color: #ffffff !important;
+    border-color: transparent !important;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.15);
+}
+
+.btn.modern-btn.modern-btn-primary:hover,
+.modern-btn.modern-btn-primary:hover,
+.modern-btn-primary:hover {
+    filter: brightness(0.98);
+}
+
+/* Decor calculator window header */
+.decor-window-header {
+    background: var(--app-topbar) !important;
+    background-image: var(--app-topbar-gradient, linear-gradient(135deg, var(--app-primary-dark, #1d4ed8), var(--app-primary, #3b82f6))) !important;
+    color: #ffffff !important;
+}
+
+.decor-fab {
+    background: var(--app-topbar) !important;
+    background-image: var(--app-topbar-gradient, linear-gradient(135deg, var(--app-primary-dark, #1d4ed8), var(--app-primary, #3b82f6))) !important;
+    color: #ffffff !important;
+    border-color: transparent !important;
+    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.2);
+}
+
+.decor-fab:hover {
+    filter: brightness(0.98);
+}
+
+/* Header icons follow theme palette */
+.header-icon {
+    color: var(--app-primary, #4f46e5) !important;
+}
+
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+    .header-icon {
+        background-image: var(--app-topbar-gradient, linear-gradient(135deg, var(--app-primary-dark, #1d4ed8), var(--app-primary, #3b82f6)));
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-shadow: 0 1px 2px rgba(15, 23, 42, 0.25);
+    }
+}
+
+/* Product group browser button + toggle theme */
+.group-browser-float-btn {
+    background: var(--app-topbar) !important;
+    background-image: var(--app-topbar-gradient, linear-gradient(135deg, var(--app-primary-dark, #1d4ed8), var(--app-primary, #3b82f6))) !important;
+    color: #ffffff !important;
+    border-color: transparent !important;
+    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.2) !important;
+    z-index: 2000;
+    pointer-events: auto;
+}
+
+.group-browser-float-btn:hover {
+    filter: brightness(0.98);
+}
+
+.group-browser-toggle .btn {
+    border-color: rgba(79, 70, 229, 0.25) !important;
+    color: var(--app-primary-dark, #1f2937) !important;
+}
+
+.group-browser-toggle .btn.active {
+    background: var(--app-topbar) !important;
+    background-image: var(--app-topbar-gradient, linear-gradient(135deg, var(--app-primary-dark, #1d4ed8), var(--app-primary, #3b82f6))) !important;
+    color: #ffffff !important;
+    border-color: transparent !important;
+}
+
+/* Product index group browser card */
+.group-browser-card {
+    border: 1px solid color-mix(in srgb, var(--app-primary, #4f46e5) 25%, #ffffff) !important;
+    background: linear-gradient(160deg,
+        color-mix(in srgb, var(--app-primary, #4f46e5) 6%, #ffffff),
+        color-mix(in srgb, var(--app-accent, #9333ea) 4%, #ffffff)
+    ) !important;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+}
+
+.group-browser-title {
+    color: var(--app-primary-dark, #1f2937) !important;
+}
+
+.group-browser-hint {
+    color: var(--app-muted, #6b7280) !important;
+}
+
+.group-item {
+    border-color: color-mix(in srgb, var(--app-primary, #4f46e5) 12%, #ffffff) !important;
+    background: rgba(255, 255, 255, 0.75) !important;
+}
+
+.group-item:hover {
+    background: color-mix(in srgb, var(--app-primary, #4f46e5) 8%, #ffffff) !important;
+    border-color: color-mix(in srgb, var(--app-primary, #4f46e5) 25%, #ffffff) !important;
+}
+
+.group-item.active {
+    background: var(--app-topbar-gradient, linear-gradient(135deg, var(--app-primary-dark, #1d4ed8), var(--app-primary, #3b82f6))) !important;
+    border-color: transparent !important;
+    color: #ffffff !important;
+}
+
+.group-item.active .group-count-badge {
+    background: rgba(255, 255, 255, 0.2) !important;
+}
+
+@supports not (color: color-mix(in srgb, #000 50%, #fff)) {
+    .group-browser-card {
+        border-color: rgba(79, 70, 229, 0.25) !important;
+        background: rgba(255, 255, 255, 0.92) !important;
+    }
+}
+
+/* Outline buttons follow theme */
+.btn.modern-btn.modern-btn-outline,
+.modern-btn.modern-btn-outline,
+.modern-btn-outline {
+    color: var(--app-primary, #4f46e5) !important;
+    border: 1px solid color-mix(in srgb, var(--app-primary, #4f46e5) 45%, #ffffff) !important;
+    background: rgba(255, 255, 255, 0.92) !important;
+}
+
+.btn.modern-btn.modern-btn-outline:hover,
+.modern-btn.modern-btn-outline:hover,
+.modern-btn-outline:hover {
+    color: #ffffff !important;
+    border-color: transparent !important;
+    background: var(--app-topbar-gradient, linear-gradient(135deg, var(--app-primary-dark, #1d4ed8), var(--app-primary, #3b82f6))) !important;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
+}
+
+@supports not (color: color-mix(in srgb, #000 50%, #fff)) {
+    .btn.modern-btn.modern-btn-outline,
+    .modern-btn.modern-btn-outline,
+    .modern-btn-outline {
+        border-color: rgba(79, 70, 229, 0.35) !important;
+    }
+}
+
+/* Toggle labels (e.g., delivered/pending) */
+.toggle-label,
+.toggle-option {
+    border-color: color-mix(in srgb, var(--app-primary, #4f46e5) 30%, #ffffff) !important;
+    color: var(--app-primary-dark, #1f2937) !important;
+}
+
+.toggle-group input:checked + .toggle-label,
+.toggle-group input:checked + .toggle-option {
+    color: #ffffff !important;
+    background: var(--app-topbar-gradient, linear-gradient(135deg, var(--app-primary-dark, #1d4ed8), var(--app-primary, #3b82f6))) !important;
+    border-color: transparent !important;
+}
+
+/* Modern modal theme */
+.modal-content.modern-modal,
+.modern-modal .modal-content {
+    border: 1px solid color-mix(in srgb, var(--app-primary, #4f46e5) 18%, #ffffff) !important;
+    background: rgba(255, 255, 255, 0.96) !important;
+    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.22);
+}
+
+.modern-modal .modal-header,
+.modern-modal-header {
+    background: var(--app-topbar-gradient, linear-gradient(135deg, var(--app-primary-dark, #1d4ed8), var(--app-primary, #3b82f6))) !important;
+    color: #ffffff !important;
+}
+
+.modern-modal .modal-title,
+.modern-modal-header .modal-title {
+    color: #ffffff !important;
+}
+
+/* Category cards (tiles/categories index) */
+.category-card {
+    border: 1px solid color-mix(in srgb, var(--app-primary, #4f46e5) 18%, #ffffff) !important;
+    background: linear-gradient(160deg,
+        color-mix(in srgb, var(--app-primary, #4f46e5) 6%, #ffffff),
+        color-mix(in srgb, var(--app-accent, #9333ea) 4%, #ffffff)
+    ) !important;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+}
+
+.category-card .category-header {
+    background: var(--app-topbar-gradient, linear-gradient(135deg, var(--app-primary-dark, #1d4ed8), var(--app-primary, #3b82f6))) !important;
+    color: #ffffff !important;
+}
+
+.category-card .category-title h4,
+.category-card .category-title .category-id {
+    color: #ffffff !important;
+}
+
+.category-card .spec-icon {
+    color: var(--app-primary, #4f46e5) !important;
+}
+
+.category-card .spec-label {
+    color: var(--app-muted, #6b7280) !important;
+}
+
+.category-card .spec-value {
+    color: var(--app-primary-dark, #1f2937) !important;
+}
+
+.category-card .category-meta,
+.category-card .meta-item,
+.category-card .meta-item i {
+    color: var(--app-muted, #6b7280) !important;
+}
+
+.category-card .category-actions .btn {
+    border-color: transparent !important;
+}
+
+@supports not (color: color-mix(in srgb, #000 50%, #fff)) {
+    .category-card {
+        border-color: rgba(79, 70, 229, 0.25) !important;
+        background: rgba(255, 255, 255, 0.92) !important;
+    }
+}
+
+/* Stat cards */
+.stat-card {
+    border: 1px solid color-mix(in srgb, var(--app-primary, #4f46e5) 18%, #ffffff) !important;
+    background: linear-gradient(160deg,
+        color-mix(in srgb, var(--app-primary, #4f46e5) 6%, #ffffff),
+        color-mix(in srgb, var(--app-accent, #9333ea) 4%, #ffffff)
+    ) !important;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+}
+
+.stat-card .stat-icon {
+    color: var(--app-primary, #4f46e5) !important;
+}
+
+.stat-card .stat-value {
+    color: var(--app-primary-dark, #1f2937) !important;
+}
+
+.stat-card .stat-label {
+    color: var(--app-muted, #6b7280) !important;
+}
+
+.stat-card.stat-primary,
+.stat-card.stat-success,
+.stat-card.stat-warning,
+.stat-card.stat-danger,
+.stat-card.stat-info {
+    background: linear-gradient(160deg,
+        color-mix(in srgb, var(--app-primary, #4f46e5) 10%, #ffffff),
+        color-mix(in srgb, var(--app-accent, #9333ea) 8%, #ffffff)
+    ) !important;
+}
+
+/* Summary cards (payees ledger, reports) */
+.summary-card-info::before,
+.summary-card.summary-card-info::before,
+.summary-card.summary-info::before {
+    background: var(--app-topbar-gradient, linear-gradient(135deg, var(--app-primary-dark, #1d4ed8), var(--app-primary, #3b82f6))) !important;
+}
+
+.summary-card-info .summary-icon,
+.summary-card.summary-card-info .summary-icon,
+.summary-card.summary-info .summary-icon {
+    color: var(--app-primary, #4f46e5) !important;
+}
+
+@supports not (color: color-mix(in srgb, #000 50%, #fff)) {
+    .stat-card {
+        border-color: rgba(79, 70, 229, 0.25) !important;
+        background: rgba(255, 255, 255, 0.92) !important;
+    }
+}
+
+/* DataTables pagination */
+.paginate_button.page-item .page-link {
+    color: var(--app-primary, #4f46e5) !important;
+    border-color: rgba(79, 70, 229, 0.2) !important;
+    background: rgba(255, 255, 255, 0.85) !important;
+}
+
+.paginate_button.page-item.active .page-link,
+.paginate_button.page-item .page-link:focus,
+.paginate_button.page-item .page-link:hover {
+    color: #ffffff !important;
+    background: var(--app-topbar-gradient, linear-gradient(135deg, var(--app-primary-dark, #1d4ed8), var(--app-primary, #3b82f6))) !important;
+    border-color: transparent !important;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
+}
+
+/* Themed muted form labels */
+.form-label.small.fw-bold.text-muted {
+    color: var(--app-primary-dark, #1f2937) !important;
+    opacity: 0.85;
+}
+
+/* Small light buttons should follow theme */
+.btn.btn-sm.btn-light {
+    background: var(--app-topbar-gradient, linear-gradient(135deg, var(--app-primary-dark, #1d4ed8), var(--app-primary, #3b82f6))) !important;
+    color: #ffffff !important;
+    border-color: transparent !important;
+    box-shadow: 0 6px 14px rgba(15, 23, 42, 0.15);
+}
+
+.btn.btn-sm.btn-light:hover,
+.btn.btn-sm.btn-light:focus {
+    filter: brightness(0.98);
+    color: #ffffff !important;
+}
+
+@supports (color: color-mix(in srgb, #000 50%, #fff)) {
+    .table thead th {
+        background: linear-gradient(
+            135deg,
+            color-mix(in srgb, var(--app-primary, #4f46e5) 15%, #ffffff),
+            color-mix(in srgb, var(--app-accent, #9333ea) 12%, #ffffff)
+        );
+        border-bottom-color: color-mix(in srgb, var(--app-primary, #4f46e5) 35%, #ffffff);
+    }
+
+    .modern-thead th,
+    .modern-table thead th {
+        background: linear-gradient(
+            135deg,
+            color-mix(in srgb, var(--app-primary, #4f46e5) 18%, #ffffff),
+            color-mix(in srgb, var(--app-accent, #9333ea) 14%, #ffffff)
+        ) !important;
+        border-bottom-color: color-mix(in srgb, var(--app-primary, #4f46e5) 40%, #ffffff) !important;
+    }
+
+    .modern-tfoot,
+    .modern-table tfoot {
+        background: linear-gradient(
+            135deg,
+            color-mix(in srgb, var(--app-primary, #4f46e5) 12%, #ffffff),
+            color-mix(in srgb, var(--app-accent, #9333ea) 10%, #ffffff)
+        ) !important;
+        border-top-color: color-mix(in srgb, var(--app-primary, #4f46e5) 30%, #ffffff) !important;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .navbar-nav .nav-item.topnav-hide-mobile {
+        display: none !important;
+    }
+
+    .navbar-nav .nav-link.topnav-hide-mobile {
+        display: none !important;
+    }
+}

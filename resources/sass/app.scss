@@ -1,0 +1,11 @@
+// All @use rules must come first
+@use 'variables';
+@use 'bootstrap/scss/bootstrap';
+
+// External fonts should use @import (not @use)
+@import url('https://fonts.bunny.net/css?family=Nunito');
+
+// Your custom styles go after
+body {
+    font-family: 'Nunito', sans-serif;
+}

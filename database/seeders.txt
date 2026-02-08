@@ -1,0 +1,476 @@
+
+--- Contents of ColorentManagementSeeder.php ---
+<?php
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\Models\Permission;
+use App\Models\User;
+
+class ColorentManagementSeeder extends Seeder
+{
+    public function run(): void
+    {
+        // Reset cached roles and permissions
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+
+        // Create permissions for colorent management (only if they don't exist)
+        $permissions = [
+            'view colorents',
+            'edit colorents',
+            'manage stock',
+            'update prices'
+        ];
+
+        foreach ($permissions as $permission) {
+            Permission::firstOrCreate(['name' => $permission]);
+        }
+
+        // Update cache to know about the newly created permissions
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+
+        // Get existing roles and assign permissions
+        $superAdmin = Role::where('name', 'Super Admin')->first();
+        if ($superAdmin) {
+            $superAdmin->givePermissionTo([
+                'view colorents',
+                'edit colorents', 
+                'manage stock',
+                'update prices'
+            ]);
+        }
+
+        $admin = Role::where('name', 'Admin')->first();
+        if ($admin) {
+            $admin->givePermissionTo([
+                'view colorents',
+                'edit colorents',
+                'manage stock',
+                'update prices'
+            ]);
+        }
+
+        $manager = Role::where('name', 'Manager')->first();
+        if ($manager) {
+            $manager->givePermissionTo([
+                'view colorents',
+                'edit colorents',
+                'manage stock'
+            ]);
+        }
+
+        $warehouse = Role::where('name', 'Warhouse')->first();
+        if ($warehouse) {
+            $warehouse->givePermissionTo([
+                'view colorents',
+                'manage stock'
+            ]);
+        }
+
+        echo "Colorent permissions assigned to existing roles successfully!\n";
+    }
+}
+
+
+--- Contents of ColorentSeeder.php ---
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Database\Seeder;
+
+class ColorentSeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
+    {
+         \App\Models\Colorent::insert([
+       [ 'name' => 'COLORANT OC Ochre 1 L',           'stock' => 1, 'price' => 910.00 ],
+    [ 'name' => 'COLORANT OR Reddish Yellow 1 L',  'stock' => 1, 'price' => 3370.00 ],
+    [ 'name' => 'COLORANT BC Consent Blue 1 L',    'stock' => 1, 'price' => 2320.00 ],
+    [ 'name' => 'COLORANT BF Diluted Blue 1 L',    'stock' => 1, 'price' => 1215.00 ],
+    [ 'name' => 'COLORANT BR Tinting Black 1 L',   'stock' => 1, 'price' => 1225.00 ],
+    [ 'name' => 'COLORANT GC Concentrte Green 1 L','stock' => 1, 'price' => 2595.00 ],
+    [ 'name' => 'COLORANT GF Diluted Green 1 L',   'stock' => 1, 'price' => 2585.00 ],
+    [ 'name' => 'COLORANT LM Greenish Yellow 1 L', 'stock' => 1, 'price' => 3020.00 ],
+    [ 'name' => 'COLORANT MG Magenta 1 L',         'stock' => 1, 'price' => 3700.00 ],
+    [ 'name' => 'COLORANT NS Medium Yellow 1 L',   'stock' => 1, 'price' => 1510.00 ],
+    [ 'name' => 'COLORANT NT Concentrte Black 1 L','stock' => 1, 'price' => 945.00  ],
+    [ 'name' => 'COLORANT RD Bright Red (Int) 1 L','stock' => 1, 'price' => 2140.00 ],
+    [ 'name' => 'COLORANT RE Bright Red (Ext) 1 L','stock' => 1, 'price' => 4630.00 ],
+    [ 'name' => 'COLORANT SP Oxide Red 1 L',       'stock' => 1, 'price' => 1845.00 ],
+    [ 'name' => 'COLORANT VB Red Violet 1 L',      'stock' => 1, 'price' => 1635.00 ],
+    [ 'name' => 'COLORANT WT White 1 L',           'stock' => 1, 'price' => 1370.00 ]
+         ]);
+}
+}
+
+--- Contents of CreateAdminUserSeeder.php ---
+<?php
+  
+namespace Database\Seeders;
+  
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Database\Seeder;
+use App\Models\User;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\Models\Permission;
+  
+class CreateAdminUserSeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
+    {
+        $user = User::create([
+            'name' => 'Hardik Savani', 
+            'email' => 'admin@gmail.com',
+            'password' => bcrypt('123456')
+        ]);
+        
+        $role = Role::create(['name' => 'Admin']);
+         
+        $permissions = Permission::pluck('id','id')->all();
+       
+        $role->syncPermissions($permissions);
+         
+        $user->assignRole([$role->id]);
+    }
+}
+
+--- Contents of DatabaseSeeder.php ---
+<?php
+
+namespace Database\Seeders;
+
+use App\Models\User;
+// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Database\Seeder;
+
+class DatabaseSeeder extends Seeder
+{
+    /**
+     * Seed the application's database.
+     */
+    public function run()
+    {
+        $this->call([
+            // ...other seeders
+            TransactionSeeder::class,
+        ]);
+    }
+    
+}
+
+--- Contents of OtherDeliveryReturnPermissionSeeder.php ---
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Permission;
+
+class OtherDeliveryReturnPermissionSeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     *
+     * @return void
+     */
+    public function run()
+    {
+        $permissions = [
+            'other-delivery-return-list',
+            'other-delivery-return-create',
+            'other-delivery-return-edit',
+            'other-delivery-return-delete',
+            'other-delivery-return-print'
+        ];
+
+        foreach ($permissions as $permission) {
+            Permission::create(['name' => $permission, 'guard_name' => 'web']);
+        }
+    }
+}
+
+
+--- Contents of PermissionTableSeeder.php ---
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
+
+class PermissionTableSeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     *
+     * @return void
+     */
+    public function run()
+    {
+        // Reset cached roles and permissions
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+
+        // Create permissions
+        $permissions = [
+            // Business Settings
+            'business-settings-view',
+            'business-settings-edit',
+            
+            // Cash Register
+            'cash-register-list',
+            'cash-register-open',
+            'cash-register-close',
+            'cash-register-add-transaction',
+            'cash-register-report',
+            
+            // Challan
+            'challan-list',
+            'challan-create',
+            'challan-edit',
+            'challan-delete',
+            'challan-print',
+            
+            // Customer
+            'customer-list',
+            'customer-create',
+            'customer-edit',
+            'customer-delete',
+            'customer-ledger',
+            'customer-import',
+            'customer-export',
+            
+            // Debt Collection
+            'debt-collection-dashboard',
+            'debt-collection-track',
+            'debt-collection-view-reports',
+            'debt-collection-set-priority',
+            
+            // Invoice
+            'invoice-list',
+            'invoice-create',
+            'invoice-edit',
+            'invoice-delete',
+            'invoice-print',
+            'invoice-export',
+            'invoice-mark-paid',
+            'invoice-update-delivery-status',
+            
+            // Other Delivery
+            'other-delivery-list',
+            'other-delivery-create',
+            'other-delivery-edit',
+            'other-delivery-delete',
+            'other-delivery-print',
+            
+            // Payable Transaction
+            'payable-transaction-list',
+            'payable-transaction-create',
+            'payable-transaction-edit',
+            'payable-transaction-delete',
+            
+            // Payee
+            'payee-list',
+            'payee-create',
+            'payee-edit',
+            'payee-delete',
+            'payee-ledger',
+            'payee-reports',
+            
+            // Products
+            'product-list',
+            'product-create',
+            'product-edit',
+            'product-delete',
+            'product-import',
+            'product-export',
+            
+            // Categories
+            'category-list',
+            'category-create',
+            'category-edit',
+            'category-delete',
+            
+            // Suppliers
+            'supplier-list',
+            'supplier-create',
+            'supplier-edit',
+            'supplier-delete',
+            'supplier-ledger',
+            
+            // Purchases
+            'purchase-list',
+            'purchase-create',
+            'purchase-edit',
+            'purchase-delete',
+            'purchase-print',
+            
+            // Returns
+            'return-list',
+            'return-create',
+            'return-edit',
+            'return-delete',
+            'return-print',
+            
+            // Expenses
+            'expense-list',
+            'expense-create',
+            'expense-edit',
+            'expense-delete',
+            'expense-report',
+            
+            // Transactions
+            'transaction-list',
+            'transaction-create',
+            'transaction-edit',
+            'transaction-delete',
+            
+            // Remaining Products
+            'remaining-products-view',
+            
+            // Profile
+            'profile-edit',
+            'profile-delete',
+            
+            // Reports
+            'report-sales',
+            'report-inventory',
+            'report-financial',
+            'report-export',
+            
+            // User Management
+            'user-list',
+            'user-create',
+            'user-edit',
+            'user-delete',
+            'role-list',
+            'role-create',
+            'role-edit',
+            'role-delete',
+        ];
+
+        foreach ($permissions as $permission) {
+            Permission::create(['name' => $permission]);
+        }
+}
+}
+
+--- Contents of SuperAdminSeeder.php ---
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+use App\Models\User;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\Models\Permission;
+
+class SuperAdminSeeder extends Seeder
+{
+    public function run()
+    {
+        // Create a Super Admin role
+        $superAdminRole = Role::firstOrCreate(['name' => 'Super Admin']);
+        
+        // Get all permissions
+        $permissions = Permission::all();
+        
+        // Assign all permissions to Super Admin role
+        $superAdminRole->syncPermissions($permissions);
+        
+        // Create Super Admin user
+        $superAdmin = User::firstOrCreate(
+            ['email' => 'superadmin@gamil.com'],
+            [
+                'name' => 'Super Admin',
+                'password' => bcrypt('sam25524'), // Change this to a secure password
+            ]
+        );
+        
+        // Assign Super Admin role to user
+        $superAdmin->assignRole($superAdminRole);
+    }
+}
+
+
+--- Contents of TransactionSeeder.php ---
+<?php
+
+namespace Database\Seeders;
+
+use App\Models\Customer;
+use App\Models\Transaction;
+use Illuminate\Database\Seeder;
+
+class TransactionSeeder extends Seeder
+{
+    public function run()
+    {
+        // Ensure we have customers
+        if (Customer::count() == 0) {
+            Customer::create([
+                'name' => 'John Doe',
+                'phone' => '1234567890',
+                'address' => '123 Main St',
+                'opening_balance' => 1000,
+                'outstanding_balance' => 1000,
+            ]);
+            
+            Customer::create([
+                'name' => 'Jane Smith',
+                'phone' => '0987654321',
+                'address' => '456 Oak Ave',
+                'opening_balance' => 500,
+                'outstanding_balance' => 500,
+            ]);
+        }
+        
+        $customers = Customer::all();
+        
+        foreach ($customers as $customer) {
+            // Create some debit transactions (customer paying)
+            for ($i = 0; $i < 3; $i++) {
+                $amount = rand(50, 200);
+                Transaction::create([
+                    'customer_id' => $customer->id,
+                    'type' => 'debit',
+                    'purpose' => 'Payment for invoice #' . rand(1000, 9999),
+                    'method' => ['cash', 'bank', 'mobile_bank', 'cheque'][rand(0, 3)],
+                    'amount' => $amount,
+                    'note' => 'Sample debit transaction',
+                    'created_at' => now()->subDays(rand(1, 30)),
+                ]);
+                
+                $customer->outstanding_balance -= $amount;
+            }
+            
+            // Create some credit transactions (customer receiving)
+            for ($i = 0; $i < 2; $i++) {
+                $amount = rand(100, 300);
+                Transaction::create([
+                    'customer_id' => $customer->id,
+                    'type' => 'credit',
+                    'purpose' => 'Product purchase #' . rand(1000, 9999),
+                    'method' => ['cash', 'bank', 'mobile_bank', 'cheque'][rand(0, 3)],
+                    'amount' => $amount,
+                    'note' => 'Sample credit transaction',
+                    'created_at' => now()->subDays(rand(1, 30)),
+                ]);
+                
+                $customer->outstanding_balance += $amount;
+            }
+            
+            $customer->save();
+        }
+    }
+}
+
