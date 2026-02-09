@@ -243,6 +243,52 @@
                 </div>
             @endif
 
+            <!-- Individual Seeders -->
+            <div class="card modern-card mb-4">
+                <div class="card-header modern-header info-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-seedling"></i> Run Individual Seeder
+                    </h3>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                        <table class="table modern-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Seeder</th>
+                                    <th width="20%">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="seeders-table-body">
+                                @if(!empty($seeders))
+                                    @foreach($seeders as $seeder)
+                                        <tr>
+                                            <td>
+                                                <strong>{{ $seeder['description'] ?? \Illuminate\Support\Str::headline(str_replace('Seeder', '', ($seeder['name'] ?? $seeder))) }}</strong>
+                                                <br>
+                                                <small class="text-muted">{{ $seeder['name'] ?? $seeder }}</small>
+                                            </td>
+                                            <td>
+                                                <button type="button"
+                                                        class="btn btn-sm modern-btn modern-btn-teal run-single-seeder"
+                                                        data-seeder="{{ $seeder['class'] ?? $seeder }}"
+                                                        data-seeder-name="{{ $seeder['name'] ?? $seeder }}">
+                                                    <i class="fas fa-play"></i> Run
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                @else
+                                    <tr>
+                                        <td colspan="2" class="text-muted p-3">Loading seeders...</td>
+                                    </tr>
+                                @endif
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
             <!-- Completed Migrations -->
             <div class="card modern-card">
                 <div class="card-header modern-header success-header">
@@ -497,6 +543,57 @@ $(document).ready(function() {
             $btn.removeClass('loading');
             $btn.html($btn.data('original-html'));
         }
+    }
+
+    function renderSeeders(seeders) {
+        const $tbody = $('#seeders-table-body');
+
+        if (!Array.isArray(seeders) || seeders.length === 0) {
+            $tbody.html('<tr><td colspan="2" class="text-muted p-3">No seeders found in database/seeders.</td></tr>');
+            return;
+        }
+
+        const rows = seeders.map((seeder) => {
+            const name = seeder.name || '';
+            const seederClass = seeder.class || name;
+            const description = seeder.description || name.replace(/Seeder$/, '').replace(/([a-z])([A-Z])/g, '$1 $2');
+
+            return `
+                <tr>
+                    <td>
+                        <strong>${description}</strong><br>
+                        <small class="text-muted">${name}</small>
+                    </td>
+                    <td>
+                        <button type="button"
+                                class="btn btn-sm modern-btn modern-btn-teal run-single-seeder"
+                                data-seeder="${seederClass}"
+                                data-seeder-name="${name}">
+                            <i class="fas fa-play"></i> Run
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        $tbody.html(rows);
+    }
+
+    function loadSeeders() {
+        $.ajax({
+            url: '{{ route("system.update.seeders") }}',
+            type: 'GET',
+            success: function(response) {
+                if (response && response.success) {
+                    renderSeeders(response.seeders || []);
+                } else {
+                    renderSeeders([]);
+                }
+            },
+            error: function() {
+                $('#seeders-table-body').html('<tr><td colspan="2" class="text-danger p-3">Failed to load seeders.</td></tr>');
+            }
+        });
     }
 
     // Run all migrations
@@ -898,6 +995,53 @@ $(document).ready(function() {
             }
         });
     });
+
+    // Run a single seeder
+    $(document).on('click', '.run-single-seeder', function() {
+        const $btn = $(this);
+        const seeder = $btn.data('seeder');
+        const seederName = $btn.data('seeder-name') || seeder;
+        const $row = $btn.closest('tr');
+
+        if (!confirm(`Run seeder: ${seederName}?`)) {
+            return;
+        }
+
+        setButtonLoading($btn, true);
+        $row.addClass('migration-running');
+
+        $.ajax({
+            url: '{{ route("system.update.seed") }}',
+            type: 'POST',
+            headers: { 'X-CSRF-TOKEN': csrfToken },
+            data: { seeder: seeder },
+            timeout: 180000,
+            success: function(response) {
+                setButtonLoading($btn, false);
+                $row.removeClass('migration-running');
+
+                if (response.success) {
+                    $row.addClass('migration-success');
+                    showAlert('success', `Seeder "${seederName}" completed successfully.`);
+                    if (response.output) {
+                        $('#command-output').text(response.output);
+                        $('#output-modal').modal('show');
+                    }
+                } else {
+                    $row.addClass('migration-error');
+                    showAlert('danger', response.message || 'Seeder failed');
+                }
+            },
+            error: function(xhr) {
+                setButtonLoading($btn, false);
+                $row.removeClass('migration-running').addClass('migration-error');
+                const response = xhr.responseJSON || {};
+                showAlert('danger', response.message || 'Seeder failed');
+            }
+        });
+    });
+
+    loadSeeders();
 
     // Assign default godown to products
     $('#assign-default-godown-btn').click(function() {

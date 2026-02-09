@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 use Carbon\Carbon;
 
 class DatabaseUpdateController extends Controller
@@ -25,8 +26,9 @@ class DatabaseUpdateController extends Controller
     {
         $migrationStatus = $this->getMigrationStatus();
         $systemInfo = $this->getSystemInfo();
+        $seeders = $this->getAvailableSeeders(true, true);
 
-        return view('system.database-update', compact('migrationStatus', 'systemInfo'));
+        return view('system.database-update', compact('migrationStatus', 'systemInfo', 'seeders'));
     }
 
     /**
@@ -451,6 +453,18 @@ class DatabaseUpdateController extends Controller
 
             if ($seeder) {
                 $seederClass = $this->normalizeSeederClass($seeder);
+                $allowedSeeders = collect($this->getAvailableSeeders(true, true))
+                    ->map(fn (array $item) => $item['class'])
+                    ->values()
+                    ->all();
+
+                if (!in_array($seederClass, $allowedSeeders, true)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Invalid seeder selected.',
+                    ], 422);
+                }
+
                 Artisan::call('db:seed', [
                     '--class' => $seederClass,
                     '--force' => true
@@ -480,22 +494,12 @@ class DatabaseUpdateController extends Controller
      */
     public function getSeeders()
     {
-        $seederPath = database_path('seeders');
-        $seeders = [];
-
-        if (File::exists($seederPath)) {
-            $files = File::files($seederPath);
-            foreach ($files as $file) {
-                $name = pathinfo($file->getFilename(), PATHINFO_FILENAME);
-                if ($name !== 'DatabaseSeeder') {
-                    $seeders[] = $name;
-                }
-            }
-        }
+        $seeders = $this->getAvailableSeeders(true, true);
 
         return response()->json([
             'success' => true,
             'seeders' => $seeders,
+            'total' => count($seeders),
         ]);
     }
 
@@ -707,5 +711,59 @@ class DatabaseUpdateController extends Controller
         return 'Database\\Seeders\\' . $seeder;
     }
 
-    
+    private function getAvailableSeeders(bool $includeDatabaseSeeder = false, bool $detailed = false): array
+    {
+        $seederPath = database_path('seeders');
+        $seeders = [];
+
+        if (!File::exists($seederPath)) {
+            return $seeders;
+        }
+
+        foreach (File::files($seederPath) as $file) {
+            $fqcn = $this->extractSeederClassFromFile($file->getPathname());
+            if (!$fqcn) {
+                continue;
+            }
+
+            if (!$includeDatabaseSeeder && Str::endsWith($fqcn, '\\DatabaseSeeder')) {
+                continue;
+            }
+
+            $className = class_basename($fqcn);
+            $seeders[$fqcn] = [
+                'name' => $className,
+                'class' => $fqcn,
+                'description' => Str::headline(str_replace('Seeder', '', $className)),
+                'file' => $file->getFilename(),
+            ];
+        }
+
+        $seeders = array_values($seeders);
+        usort($seeders, function (array $a, array $b) {
+            return strnatcasecmp($a['name'], $b['name']);
+        });
+
+        if ($detailed) {
+            return $seeders;
+        }
+
+        return array_values(array_map(fn (array $item) => $item['name'], $seeders));
+    }
+
+    private function extractSeederClassFromFile(string $path): ?string
+    {
+        $content = File::get($path);
+
+        if (!preg_match('/class\s+([A-Za-z_][A-Za-z0-9_]*)\s+extends\s+Seeder/', $content, $classMatch)) {
+            return null;
+        }
+
+        $namespace = 'Database\\Seeders';
+        if (preg_match('/namespace\s+([^;]+);/', $content, $namespaceMatch)) {
+            $namespace = trim($namespaceMatch[1]);
+        }
+
+        return $namespace . '\\' . $classMatch[1];
+    }
 }

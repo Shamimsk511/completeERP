@@ -162,6 +162,16 @@ class UpdatePermissionsSeeder extends Seeder
             'chat-clear',
         ];
 
+        // Team chat should be available to core operational roles.
+        $chatRoleNames = [
+            'Admin',
+            'Manager',
+            'Warhouse',
+            'Warehouse',
+            'Accountant',
+            'Demo User',
+        ];
+
         if ($adminRole) {
             $adminRole->givePermissionTo($adminCustomerPermissions);
             $this->command->info('Admin role updated with customer permissions.');
@@ -172,14 +182,10 @@ class UpdatePermissionsSeeder extends Seeder
             $this->command->info('Manager role updated with customer permissions.');
         }
 
-        if ($adminRole) {
-            $adminRole->givePermissionTo($chatPermissions);
-            $this->command->info('Admin role updated with chat permissions.');
-        }
-
-        if ($managerRole) {
-            $managerRole->givePermissionTo($chatPermissions);
-            $this->command->info('Manager role updated with chat permissions.');
+        $chatRoles = Role::whereIn('name', $chatRoleNames)->get();
+        foreach ($chatRoles as $chatRole) {
+            $chatRole->givePermissionTo($chatPermissions);
+            $this->command->info("{$chatRole->name} role updated with chat permissions.");
         }
 
         if ($adminRole) {
@@ -187,9 +193,13 @@ class UpdatePermissionsSeeder extends Seeder
             $this->command->info('Admin role updated with chat admin permissions.');
         }
 
-        if ($managerRole) {
+        foreach ($chatRoles as $chatRole) {
+            if ($chatRole->name === 'Admin') {
+                continue;
+            }
+
             try {
-                $managerRole->revokePermissionTo($adminChatPermissions);
+                $chatRole->revokePermissionTo($adminChatPermissions);
             } catch (\Exception $e) {
                 // Ignore if permissions are not assigned yet.
             }
