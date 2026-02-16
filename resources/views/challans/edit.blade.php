@@ -333,6 +333,23 @@
                                     </tr>
                                 @endforeach
                             </tbody>
+                            <tfoot>
+                                <tr class="totals-row">
+                                    <td colspan="{{ $godowns->isNotEmpty() ? 6 : 5 }}" class="text-right font-weight-bold">
+                                        Totals:
+                                    </td>
+                                    <td>
+                                        <input type="text" id="total-quantity" class="form-control modern-input compact-input font-weight-bold" value="0.00" readonly>
+                                    </td>
+                                    <td></td>
+                                    <td>
+                                        <input type="text" id="total-boxes" class="form-control modern-input compact-input font-weight-bold" value="0" readonly>
+                                    </td>
+                                    <td>
+                                        <input type="text" id="total-pieces" class="form-control modern-input compact-input font-weight-bold" value="0" readonly>
+                                    </td>
+                                </tr>
+                            </tfoot>
                         </table>
                     </div>
                 </div>
@@ -620,6 +637,30 @@
             border-color: #d1d5db !important;
         }
 
+        .compact-input {
+            padding: 4px 8px;
+            font-size: 13px;
+            height: auto;
+        }
+
+        .totals-row {
+            background-color: #f8f9fa;
+            border-top: 2px solid #dee2e6;
+        }
+
+        .totals-row td {
+            padding: 8px 4px !important;
+            vertical-align: middle;
+            border: none !important;
+        }
+
+        .totals-row input {
+            background-color: #e9ecef;
+            border: 1px solid #ced4da;
+            font-weight: bold;
+            text-align: center;
+        }
+
         /* Enhanced button loading state */
         .btn:disabled {
             opacity: 0.7;
@@ -710,6 +751,8 @@
                     row.find('.quantity-field').val(0);
                     row.find('.box-field, .pieces-field').val('');
                 }
+
+                calculateTotals();
             });
             
             // Enhanced form submission validation
@@ -769,12 +812,14 @@
                 $(this).removeClass('is-invalid');
                 calculateBoxesAndPieces($(this).closest('tr'));
                 updateCurrentQuantityBadge($(this).closest('tr'));
+                calculateTotals();
             });
             
             // Calculate quantity based on boxes and pieces
             $(document).on('input', '.box-field, .pieces-field', function() {
                 calculateQuantityFromBoxPieces($(this).closest('tr'));
                 updateCurrentQuantityBadge($(this).closest('tr'));
+                calculateTotals();
             });
             
             // Calculate initial values for checked items
@@ -783,6 +828,8 @@
                     calculateBoxesAndPieces($(this));
                 }
             });
+
+            calculateTotals();
         });
         
         // Initialize quantity type handling
@@ -808,6 +855,8 @@
                         calculateBoxesAndPieces(row);
                     }
                 }
+
+                calculateTotals();
             });
             
             // Initialize existing rows
@@ -820,31 +869,20 @@
             const boxPcs = parseFloat(row.find('.box-pcs').val()) || 0;
             const piecesFeet = parseFloat(row.find('.pieces-feet').val()) || 0;
 
-            // Only need piecesFeet to calculate pieces (boxPcs is optional)
+            // Convert quantity -> whole pieces first, then split into box + remainder.
             if (piecesFeet > 0 && quantity > 0) {
-                // Calculate exact pieces: quantity (sft) / sqft per piece = number of pieces
-                const exactPieces = quantity / piecesFeet;
-
-                // Round to nearest whole number
-                const roundedPieces = Math.round(exactPieces);
-
-                // Check if the rounded value is very close to a whole number (within 0.01)
-                const isWholeNumber = Math.abs(exactPieces - roundedPieces) < 0.01;
-
-                // Use rounded value if close to whole, otherwise use exact
-                let displayPieces = isWholeNumber ? roundedPieces : exactPieces;
+                const totalPieces = Math.max(0, Math.round(quantity / piecesFeet));
 
                 // Calculate boxes and loose pieces
                 if (boxPcs > 0) {
-                    const boxes = Math.floor(displayPieces / boxPcs);
-                    const loosePieces = displayPieces - (boxes * boxPcs);
+                    const boxes = Math.floor(totalPieces / boxPcs);
+                    const loosePieces = totalPieces % boxPcs;
                     row.find('.box-field').val(boxes);
-                    // Round loose pieces to handle floating point
-                    row.find('.pieces-field').val(Math.round(loosePieces));
+                    row.find('.pieces-field').val(loosePieces);
                 } else {
                     // No box_pcs, show total pieces only
                     row.find('.box-field').val(0);
-                    row.find('.pieces-field').val(Math.round(displayPieces));
+                    row.find('.pieces-field').val(totalPieces);
                 }
             } else if (boxPcs > 0 && quantity > 0) {
                 // Fallback: only boxPcs without piecesFeet - use old calculation
@@ -861,10 +899,17 @@
         
         // Calculate quantity based on boxes and pieces
         function calculateQuantityFromBoxPieces(row) {
-            const boxes = parseInt(row.find('.box-field').val()) || 0;
-            const pieces = parseInt(row.find('.pieces-field').val()) || 0;
+            let boxes = parseInt(row.find('.box-field').val()) || 0;
+            let pieces = parseInt(row.find('.pieces-field').val()) || 0;
             const boxPcs = parseFloat(row.find('.box-pcs').val()) || 0;
             const piecesFeet = parseFloat(row.find('.pieces-feet').val()) || 0;
+
+            if (boxPcs > 0 && pieces >= boxPcs) {
+                boxes += Math.floor(pieces / boxPcs);
+                pieces = pieces % boxPcs;
+                row.find('.box-field').val(boxes);
+                row.find('.pieces-field').val(pieces);
+            }
             
             if (boxPcs > 0 && piecesFeet > 0) {
                 // Calculate total pieces
@@ -888,6 +933,28 @@
         function updateCurrentQuantityBadge(row) {
             const quantity = parseFloat(row.find('.quantity-field').val()) || 0;
             row.find('.current-quantity-badge').text(quantity.toFixed(2));
+        }
+
+        function calculateTotals() {
+            let totalQuantity = 0;
+            let totalBoxes = 0;
+            let totalPieces = 0;
+
+            $('.item-row').each(function() {
+                if ($(this).find('.item-checkbox').prop('checked')) {
+                    const quantity = parseFloat($(this).find('.quantity-field').val()) || 0;
+                    const boxes = parseInt($(this).find('.box-field').val()) || 0;
+                    const pieces = parseInt($(this).find('.pieces-field').val()) || 0;
+
+                    totalQuantity += quantity;
+                    totalBoxes += boxes;
+                    totalPieces += pieces;
+                }
+            });
+
+            $('#total-quantity').val(totalQuantity.toFixed(2));
+            $('#total-boxes').val(totalBoxes);
+            $('#total-pieces').val(totalPieces);
         }
         
         // Show error alert function

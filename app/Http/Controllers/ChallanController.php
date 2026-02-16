@@ -286,22 +286,30 @@ class ChallanController extends Controller
                             ?: ($invoiceItem->code ?: ($product->name ?? ''));
                     }
 
+                    $quantity = (float) $request->quantity[$i];
+                    $normalizedBoxPieces = $this->normalizeBoxesAndPieces(
+                        $product,
+                        $quantity,
+                        $request->boxes[$i] ?? null,
+                        $request->pieces[$i] ?? null
+                    );
+
                     ChallanItem::create([
                         'challan_id' => $challan->id,
                         'invoice_item_id' => $invoiceItemId,
                         'product_id' => $request->product_id[$i],
                         'godown_id' => $godownId,
                         'description' => $description,
-                        'quantity' => $request->quantity[$i],
-                        'boxes' => $request->boxes[$i] ?? null,
-                        'pieces' => $request->pieces[$i] ?? null,
+                        'quantity' => $quantity,
+                        'boxes' => $normalizedBoxPieces['boxes'],
+                        'pieces' => $normalizedBoxPieces['pieces'],
                     ]);
 
                     // Reduce stock immediately
-                    $product->decrement('current_stock', $request->quantity[$i]);
+                    $product->decrement('current_stock', $quantity);
 
                     if (ErpFeatureSetting::isEnabled('godown_management') && $godownId) {
-                        GodownStockService::adjustStock($product->id, $godownId, -$request->quantity[$i]);
+                        GodownStockService::adjustStock($product->id, $godownId, -$quantity);
                     }
                 }
             }
@@ -584,22 +592,30 @@ class ChallanController extends Controller
                             ?: ($invoiceItem->code ?: ($product->name ?? ''));
                     }
 
+                    $quantity = (float) $request->quantity[$i];
+                    $normalizedBoxPieces = $this->normalizeBoxesAndPieces(
+                        $product,
+                        $quantity,
+                        $request->boxes[$i] ?? null,
+                        $request->pieces[$i] ?? null
+                    );
+
                     ChallanItem::create([
                         'challan_id' => $challan->id,
                         'invoice_item_id' => $invoiceItemId,
                         'product_id' => $request->product_id[$i],
                         'godown_id' => $godownId,
                         'description' => $description,
-                        'quantity' => $request->quantity[$i],
-                        'boxes' => $request->boxes[$i] ?? null,
-                        'pieces' => $request->pieces[$i] ?? null,
+                        'quantity' => $quantity,
+                        'boxes' => $normalizedBoxPieces['boxes'],
+                        'pieces' => $normalizedBoxPieces['pieces'],
                     ]);
 
                     // Reduce stock for new quantity
-                    $product->decrement('current_stock', $request->quantity[$i]);
+                    $product->decrement('current_stock', $quantity);
 
                     if (ErpFeatureSetting::isEnabled('godown_management') && $godownId) {
-                        GodownStockService::adjustStock($product->id, $godownId, -$request->quantity[$i]);
+                        GodownStockService::adjustStock($product->id, $godownId, -$quantity);
                     }
                 }
             }
@@ -671,6 +687,36 @@ class ChallanController extends Controller
     {
         $challan->load(['invoice.customer', 'items.product.category', 'items.godown']);
         return view('challans.print', compact('challan'));
+    }
+
+    protected function normalizeBoxesAndPieces(Product $product, float $quantity, $boxesInput, $piecesInput): array
+    {
+        $boxPcs = (int) round((float) ($product->category?->box_pcs ?? 0));
+        $piecesFeet = (float) ($product->category?->pieces_feet ?? 0);
+
+        $boxes = max(0, (int) floor((float) ($boxesInput ?? 0)));
+        $pieces = max(0, (int) round((float) ($piecesInput ?? 0)));
+
+        if ($boxPcs <= 0) {
+            return [
+                'boxes' => $boxesInput !== null ? $boxes : null,
+                'pieces' => $piecesInput !== null ? $pieces : null,
+            ];
+        }
+
+        if ($piecesFeet > 0 && $quantity > 0) {
+            $totalPieces = max(0, (int) round($quantity / $piecesFeet));
+            return [
+                'boxes' => (int) floor($totalPieces / $boxPcs),
+                'pieces' => (int) ($totalPieces % $boxPcs),
+            ];
+        }
+
+        $totalPiecesFromInput = ($boxes * $boxPcs) + $pieces;
+        return [
+            'boxes' => (int) floor($totalPiecesFromInput / $boxPcs),
+            'pieces' => (int) ($totalPiecesFromInput % $boxPcs),
+        ];
     }
 
     protected function updateInvoiceDeliveryStatus(Invoice $invoice)
