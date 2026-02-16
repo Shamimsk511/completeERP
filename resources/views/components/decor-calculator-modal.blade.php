@@ -1,19 +1,38 @@
+@props([
+    'compact' => false,
+    'showIcons' => true,
+])
+
 <button type="button" class="decor-fab" id="decorCalcFab" aria-label="Open Decor Calculator">
-    <i class="fas fa-calculator"></i>
+    @if($showIcons)
+        <i class="fas fa-calculator"></i>
+    @else
+        <span class="decor-fab-text">Calc</span>
+    @endif
 </button>
 
-<div class="decor-window" id="decorCalculatorWindow" aria-hidden="true">
+<div class="decor-window {{ $compact ? 'decor-window-compact' : '' }}" id="decorCalculatorWindow" aria-hidden="true">
     <div class="decor-window-header" id="decorCalculatorHeader">
         <div class="decor-window-title">
-            <i class="fas fa-calculator"></i>
+            @if($showIcons)
+                <i class="fas fa-calculator"></i>
+            @endif
             <span>Decor Calculator</span>
         </div>
         <div class="decor-window-actions">
             <button type="button" class="btn btn-light btn-sm" id="decorCalculatorMinimize" title="Minimize">
-                <i class="fas fa-minus"></i>
+                @if($showIcons)
+                    <i class="fas fa-minus"></i>
+                @else
+                    <span>Min</span>
+                @endif
             </button>
             <button type="button" class="btn btn-light btn-sm" id="decorCalculatorClose" title="Close">
-                <i class="fas fa-times"></i>
+                @if($showIcons)
+                    <i class="fas fa-times"></i>
+                @else
+                    <span>X</span>
+                @endif
             </button>
         </div>
     </div>
@@ -57,9 +76,14 @@
                     </div>
                     
                     <!-- Compact Times Settings -->
-                    <div class="card modern-card-compact mb-3">
-                        <div class="card-header modern-card-header-sm">
-                            <span class="card-title-sm"><i class="fas fa-sliders-h"></i> Times Settings</span>
+                    <div class="card modern-card-compact mb-3 times-settings-card">
+                        <div class="card-header modern-card-header-sm times-settings-header">
+                            <span class="card-title-sm">
+                                @if($showIcons)
+                                    <i class="fas fa-sliders-h"></i>
+                                @endif
+                                Times Settings
+                            </span>
                             <div class="modern-switch-sm">
                                 <input type="checkbox" class="modern-switch-input" id="excludeDeep">
                                 <label class="modern-switch-label-sm" for="excludeDeep">Exclude Deep</label>
@@ -69,9 +93,11 @@
                             <div class="row">
                                 <div class="col-4">
                                     <div class="spec-item-sm">
-                                        <div class="spec-icon-sm spec-light">
-                                            <i class="fas fa-sun"></i>
-                                        </div>
+                                        @if($showIcons)
+                                            <div class="spec-icon-sm spec-light">
+                                                <i class="fas fa-sun"></i>
+                                            </div>
+                                        @endif
                                         <div class="spec-details-sm">
                                             <label class="spec-label-sm">Light</label>
                                             <input type="number" class="form-control form-control-sm modern-input-sm" id="lightTimes" value="4" step="0.1">
@@ -80,9 +106,11 @@
                                 </div>
                                 <div class="col-4">
                                     <div class="spec-item-sm">
-                                        <div class="spec-icon-sm spec-deco">
-                                            <i class="fas fa-paint-brush"></i>
-                                        </div>
+                                        @if($showIcons)
+                                            <div class="spec-icon-sm spec-deco">
+                                                <i class="fas fa-paint-brush"></i>
+                                            </div>
+                                        @endif
                                         <div class="spec-details-sm">
                                             <label class="spec-label-sm">Deco</label>
                                             <input type="number" class="form-control form-control-sm modern-input-sm" id="decoTimes" value="1" step="0.1">
@@ -91,9 +119,11 @@
                                 </div>
                                 <div class="col-4" id="deepSection">
                                     <div class="spec-item-sm">
-                                        <div class="spec-icon-sm spec-deep">
-                                            <i class="fas fa-layer-group"></i>
-                                        </div>
+                                        @if($showIcons)
+                                            <div class="spec-icon-sm spec-deep">
+                                                <i class="fas fa-layer-group"></i>
+                                            </div>
+                                        @endif
                                         <div class="spec-details-sm">
                                             <label class="spec-label-sm">Deep</label>
                                             <input type="number" class="form-control form-control-sm modern-input-sm" id="deepTimes" value="1" step="0.1">
@@ -105,36 +135,51 @@
                     </div>
                     
                     <!-- Compact Calculate Button -->
-                    <button type="button" class="btn modern-btn modern-btn-primary btn-block mb-3" id="calculateBtn">
-                        <i class="fas fa-calculator"></i> Calculate
+                    <button type="button" class="btn modern-btn modern-btn-primary btn-block mb-3 calculate-btn" id="calculateBtn">
+                        @if($showIcons)
+                            <i class="fas fa-calculator"></i> Calculate
+                        @else
+                            Calculate
+                        @endif
                     </button>
                 </form>
                 
                 <!-- Compact Results -->
                 <div id="resultBox" class="card modern-card-compact result-card" style="display: none;">
-                    <div class="card-header modern-card-header-sm bg-success text-white">
-                        <span class="card-title-sm"><i class="fas fa-chart-bar"></i> Results</span>
+                    <div class="card-header modern-card-header-sm bg-success text-white results-bar">
+                        <span class="card-title-sm">
+                            @if($showIcons)
+                                <i class="fas fa-chart-bar"></i>
+                            @endif
+                            Results
+                        </span>
                     </div>
                     <div class="card-body p-2">
                         <!-- Compact Results Grid -->
                         <div class="row text-center mb-2">
                             <div class="col-4" id="lightResultContainer">
                                 <div class="result-item-sm result-light">
-                                    <div class="result-icon-sm"><i class="fas fa-sun"></i></div>
+                                    @if($showIcons)
+                                        <div class="result-icon-sm"><i class="fas fa-sun"></i></div>
+                                    @endif
                                     <div class="result-label-sm">Light</div>
                                     <div class="result-value-sm" id="lightResult">0</div>
                                 </div>
                             </div>
                             <div class="col-4">
                                 <div class="result-item-sm result-deco">
-                                    <div class="result-icon-sm"><i class="fas fa-paint-brush"></i></div>
+                                    @if($showIcons)
+                                        <div class="result-icon-sm"><i class="fas fa-paint-brush"></i></div>
+                                    @endif
                                     <div class="result-label-sm">Deco</div>
                                     <div class="result-value-sm" id="decoResult">0</div>
                                 </div>
                             </div>
                             <div class="col-4" id="deepResultContainer">
                                 <div class="result-item-sm result-deep">
-                                    <div class="result-icon-sm"><i class="fas fa-layer-group"></i></div>
+                                    @if($showIcons)
+                                        <div class="result-icon-sm"><i class="fas fa-layer-group"></i></div>
+                                    @endif
                                     <div class="result-label-sm">Deep</div>
                                     <div class="result-value-sm" id="deepResult">0</div>
                                 </div>
@@ -175,6 +220,12 @@
         cursor: pointer;
     }
 
+    .decor-fab-text {
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+    }
+
     .decor-window {
         position: fixed;
         right: 24px;
@@ -191,6 +242,12 @@
         overflow: hidden;
         min-width: 280px;
         min-height: 220px;
+    }
+
+    .decor-window-compact {
+        width: 320px;
+        min-width: 260px;
+        min-height: 200px;
     }
 
     .decor-window.is-open {
@@ -239,6 +296,143 @@
         overflow: hidden;
     }
 
+    .decor-window-compact .decor-window-header {
+        padding: 6px 10px;
+    }
+
+    .decor-window-compact .decor-window-title {
+        font-size: 13px;
+    }
+
+    .decor-window-compact .decor-window-body {
+        padding: 10px;
+        height: calc(100% - 38px);
+    }
+
+    .decor-window-compact .form-group.mb-3,
+    .decor-window-compact .row.mb-3,
+    .decor-window-compact .modern-card-compact.mb-3,
+    .decor-window-compact .btn.mb-3 {
+        margin-bottom: 0.5rem !important;
+    }
+
+    .decor-window-compact .form-label {
+        margin-bottom: 0.2rem;
+        font-size: 11px;
+    }
+
+    .decor-window-compact .card-body.p-2 {
+        padding: 0.5rem !important;
+    }
+
+    .decor-window-compact .decor-window-actions .btn {
+        padding: 1px 6px;
+        font-size: 11px;
+    }
+
+    .decor-window-compact .times-settings-header {
+        padding: 6px 8px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px;
+    }
+
+    .decor-window-compact .times-settings-header .card-title-sm {
+        font-size: 11px;
+        line-height: 1.1;
+        margin: 0;
+        white-space: nowrap;
+    }
+
+    .decor-window-compact .times-settings-header .modern-switch-sm {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        flex: 0 0 auto;
+    }
+
+    .decor-window-compact .times-settings-header .modern-switch-input {
+        position: relative;
+        width: 30px;
+        height: 16px;
+        appearance: none;
+        background: #d1d5db;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin: 0;
+    }
+
+    .decor-window-compact .times-settings-header .modern-switch-input:checked {
+        background: #6366f1;
+    }
+
+    .decor-window-compact .times-settings-header .modern-switch-input::before {
+        content: '';
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 12px;
+        height: 12px;
+        background: #fff;
+        border-radius: 50%;
+        transition: all 0.2s ease;
+    }
+
+    .decor-window-compact .times-settings-header .modern-switch-input:checked::before {
+        transform: translateX(14px);
+    }
+
+    .decor-window-compact .times-settings-header .modern-switch-label-sm {
+        margin: 0;
+        font-size: 10px;
+        line-height: 1;
+        white-space: nowrap;
+    }
+
+    .decor-window-compact .calculate-btn,
+    .decor-window-compact .results-bar {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+        color: #fff !important;
+        border: none !important;
+    }
+
+    .decor-window-compact .calculate-btn {
+        height: 34px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.2px;
+        margin-bottom: 0.5rem !important;
+    }
+
+    .decor-window-compact .calculate-btn:focus,
+    .decor-window-compact .calculate-btn:hover {
+        background: linear-gradient(135deg, #0ea271 0%, #047857 100%) !important;
+        color: #fff !important;
+    }
+
+    .decor-window-compact .results-bar {
+        min-height: 34px;
+        border-radius: 8px 8px 0 0;
+        padding: 7px 10px;
+        display: flex;
+        align-items: center;
+    }
+
+    .decor-window-compact .results-bar .card-title-sm {
+        font-size: 12px;
+        font-weight: 600;
+        margin: 0;
+        line-height: 1;
+    }
+
+    .decor-window-compact .result-icon-sm,
+    .decor-window-compact .spec-icon-sm {
+        display: none !important;
+    }
+
     @media (max-width: 768px) {
         .decor-window {
             width: calc(100vw - 32px);
@@ -251,6 +445,12 @@
             right: 16px;
             bottom: 16px;
         }
+
+        .decor-window-compact {
+            width: calc(100vw - 24px);
+            right: 12px;
+            left: 12px;
+        }
     }
 </style>
 
@@ -262,6 +462,8 @@
         const bodyEl = document.getElementById('decorCalculatorBody');
         const closeBtn = document.getElementById('decorCalculatorClose');
         const minimizeBtn = document.getElementById('decorCalculatorMinimize');
+        const calculateBtnDefaultLabel = @json($showIcons ? '<i class="fas fa-calculator"></i> Calculate' : 'Calculate');
+        const calculateBtnLoadingLabel = @json($showIcons ? '<i class="fas fa-spinner fa-spin"></i> Calculating...' : 'Calculating...');
 
     function openWindow() {
             windowEl.classList.add('is-open');
@@ -371,7 +573,7 @@
                     }
                     
                     const btn = this;
-                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Calculating...';
+                    btn.innerHTML = calculateBtnLoadingLabel;
                     btn.disabled = true;
                     
                     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
@@ -420,7 +622,7 @@
                         alert('Error in calculation. Please check your inputs.');
                     })
                     .finally(() => {
-                        btn.innerHTML = '<i class="fas fa-calculator"></i> Calculate';
+                        btn.innerHTML = calculateBtnDefaultLabel;
                         btn.disabled = false;
                     });
                 });

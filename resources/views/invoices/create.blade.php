@@ -398,7 +398,7 @@
     <x-product-modal :companies="$companies" :categories="$categories" />
     <x-customer-modal />
     <x-referrer-modal />
-    <x-decor-calculator-modal />
+    <x-decor-calculator-modal :compact="true" :show-icons="false" />
 @stop
 
 @section('additional_css')

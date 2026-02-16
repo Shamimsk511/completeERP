@@ -98,13 +98,13 @@
         
         <!-- Quick Stats -->
         <div class="col-lg-4">
-            <div class="card modern-card">
+            <div class="card modern-card quick-stats-card">
                 <div class="card-header modern-header stats-header">
                     <h3 class="card-title">
                         <i class="fas fa-chart-pie"></i> Quick Stats
                     </h3>
                 </div>
-                <div class="card-body modern-card-body">
+                <div class="card-body modern-card-body quick-stats-body">
                     <div class="stats-container">
                         <div class="stat-card">
                             <div class="stat-number">{{ $challan->items->count() }}</div>
@@ -460,17 +460,30 @@
     }
 
     /* Stats Container */
+    .quick-stats-card .stats-header {
+        padding: 12px 16px;
+    }
+
+    .quick-stats-card .card-title {
+        font-size: 16px;
+        margin: 0;
+    }
+
+    .quick-stats-body {
+        padding: 12px;
+    }
+
     .stats-container {
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
     }
 
     .stat-card {
         background: rgba(139, 92, 246, 0.05);
         border: 1px solid rgba(139, 92, 246, 0.1);
-        border-radius: 12px;
-        padding: 20px;
+        border-radius: 10px;
+        padding: 12px 10px;
         text-align: center;
         transition: all 0.2s ease;
     }
@@ -481,18 +494,20 @@
     }
 
     .stat-number {
-        font-size: 24px;
+        font-size: 18px;
         font-weight: 700;
         color: #8b5cf6;
-        margin-bottom: 4px;
+        margin-bottom: 2px;
+        line-height: 1.2;
     }
 
     .stat-label {
-        font-size: 12px;
+        font-size: 10px;
         font-weight: 500;
         color: #6b7280;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        letter-spacing: 0.4px;
+        line-height: 1.2;
     }
 
     /* Delivery Items */
@@ -694,13 +709,17 @@
         }
 
         .stats-container {
-            flex-direction: row;
-            flex-wrap: wrap;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        .quick-stats-body {
+            padding: 10px;
         }
 
         .stat-card {
-            flex: 1;
-            min-width: 100px;
+            min-width: 0;
+            padding: 10px 8px;
         }
 
         .modern-tbody td {
