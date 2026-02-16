@@ -30,7 +30,7 @@ class CategoryController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255|unique:categories',
+            'name' => ['required', 'string', 'max:255', $this->tenantUniqueRule('categories', 'name')],
             'is_simple_product' => 'nullable|boolean',
             'box_pcs' => 'nullable|integer|min:0',
             'tile_width_in' => 'nullable|numeric|min:0',
@@ -105,7 +105,7 @@ class CategoryController extends Controller
     public function update(Request $request, Category $category)
     {
         $request->validate([
-            'name' => 'required|string|max:255|unique:categories,name,' . $category->id,
+            'name' => ['required', 'string', 'max:255', $this->tenantUniqueRule('categories', 'name', $category->id)],
             'is_simple_product' => 'nullable|boolean',
             'box_pcs' => 'nullable|integer|min:0',
             'tile_width_in' => 'nullable|numeric|min:0',

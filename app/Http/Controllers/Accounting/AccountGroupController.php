@@ -123,7 +123,7 @@ class AccountGroupController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'code' => 'required|string|max:50|unique:account_groups,code',
+            'code' => ['required', 'string', 'max:50', $this->tenantUniqueRule('account_groups', 'code')],
             'parent_id' => 'nullable|exists:account_groups,id',
             'nature' => 'required|in:assets,liabilities,income,expenses,capital',
             'affects_gross_profit' => 'required|in:yes,no',
@@ -200,7 +200,7 @@ class AccountGroupController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'code' => 'required|string|max:50|unique:account_groups,code,' . $accountGroup->id,
+            'code' => ['required', 'string', 'max:50', $this->tenantUniqueRule('account_groups', 'code', $accountGroup->id)],
             'parent_id' => 'nullable|exists:account_groups,id',
             'affects_gross_profit' => 'required|in:yes,no',
             'description' => 'nullable|string',

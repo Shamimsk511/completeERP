@@ -174,7 +174,7 @@ class OtherDeliveryController extends Controller
 
         try {
             $validated = $request->validate([
-                'challan_number' => 'required|string|unique:other_deliveries',
+                'challan_number' => ['required', 'string', $this->tenantUniqueRule('other_deliveries', 'challan_number')],
                 'delivery_date' => 'required|date',
                 'recipient_name' => 'required|string|max:255',
                 'recipient_address' => 'required|string',

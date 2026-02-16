@@ -135,7 +135,7 @@ class ProductReturnController extends Controller
         $validated = $request->validate([
             'customer_id' => 'required|exists:customers,id',
             'invoice_id' => 'nullable|exists:invoices,id',
-            'return_number' => 'required|string|unique:product_returns',
+            'return_number' => ['required', 'string', $this->tenantUniqueRule('product_returns', 'return_number')],
             'return_date' => 'required|date',
             'subtotal' => 'required|numeric|min:0',
             'tax' => 'nullable|numeric|min:0',

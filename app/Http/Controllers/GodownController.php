@@ -29,7 +29,7 @@ class GodownController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:godowns,name',
+            'name' => ['required', 'string', 'max:255', $this->tenantUniqueRule('godowns', 'name')],
             'location' => 'nullable|string|max:255',
             'is_default' => 'nullable|boolean',
             'is_active' => 'nullable|boolean',
@@ -61,7 +61,7 @@ class GodownController extends Controller
     public function update(Request $request, Godown $godown)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:godowns,name,' . $godown->id,
+            'name' => ['required', 'string', 'max:255', $this->tenantUniqueRule('godowns', 'name', $godown->id)],
             'location' => 'nullable|string|max:255',
             'is_default' => 'nullable|boolean',
             'is_active' => 'nullable|boolean',

@@ -180,7 +180,7 @@ class ChallanController extends Controller
     {
         $rules = [
             'invoice_id' => 'required|exists:invoices,id',
-            'challan_number' => 'required|string|unique:challans',
+            'challan_number' => ['required', 'string', $this->tenantUniqueRule('challans', 'challan_number')],
             'challan_date' => 'required|date',
             'vehicle_number' => 'nullable|string|max:20',
             'driver_name' => 'nullable|string|max:100',

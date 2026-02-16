@@ -41,7 +41,7 @@ class OtherDeliveryReturnController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'return_number' => 'required|string|unique:other_delivery_returns',
+            'return_number' => ['required', 'string', $this->tenantUniqueRule('other_delivery_returns', 'return_number')],
             'return_date' => 'required|date',
             'returner_name' => 'required|string|max:255',
             'returner_address' => 'required|string',

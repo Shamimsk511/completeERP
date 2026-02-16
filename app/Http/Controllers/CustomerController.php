@@ -231,8 +231,8 @@ class CustomerController extends Controller
  public function store(Request $request)
 {
     $validator = Validator::make($request->all(), [
-        'name' => 'required|string|max:255|unique:customers',
-        'phone' => 'required|string|max:20|unique:customers',
+        'name' => ['required', 'string', 'max:255', $this->tenantUniqueRule('customers', 'name')],
+        'phone' => ['required', 'string', 'max:20', $this->tenantUniqueRule('customers', 'phone')],
         'address' => 'nullable|string',
         'opening_balance' => 'nullable|numeric',
         'account_group_id' => 'nullable|exists:account_groups,id',
@@ -464,8 +464,8 @@ public function returnItemsData(Request $request, Customer $customer)
     public function update(Request $request, Customer $customer)
     {
         $request->validate([
-            'name' => 'required|string|max:255|unique:customers,name,' . $customer->id,
-            'phone' => 'required|string|max:20|unique:customers,phone,' . $customer->id,
+            'name' => ['required', 'string', 'max:255', $this->tenantUniqueRule('customers', 'name', $customer->id)],
+            'phone' => ['required', 'string', 'max:20', $this->tenantUniqueRule('customers', 'phone', $customer->id)],
             'address' => 'nullable|string',
             'opening_balance' => 'nullable|numeric',
             'account_group_id' => 'nullable|exists:account_groups,id',

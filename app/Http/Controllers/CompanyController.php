@@ -47,7 +47,7 @@ class CompanyController extends Controller
         }
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:companies',
+            'name' => ['required', 'string', 'max:255', $this->tenantUniqueRule('companies', 'name')],
             'description' => 'nullable|string',
             'contact' => 'nullable|string|max:255',
             'type' => 'required|in:supplier,brand,both',
@@ -305,7 +305,7 @@ class CompanyController extends Controller
     public function update(Request $request, Company $company)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:companies,name,' . $company->id,
+            'name' => ['required', 'string', 'max:255', $this->tenantUniqueRule('companies', 'name', $company->id)],
             'description' => 'nullable|string',
             'contact' => 'nullable|string|max:255',
             'type' => 'required|in:supplier,brand,both',

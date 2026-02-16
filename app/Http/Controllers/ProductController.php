@@ -396,7 +396,7 @@ public function getProductGroupSummary(Request $request)
 public function store(Request $request)
 {
     $rules = [
-        'name' => 'required|string|max:255|unique:products,name',
+        'name' => ['required', 'string', 'max:255', $this->tenantUniqueRule('products', 'name')],
         'description' => 'nullable|string',
         'company_id' => 'required|exists:companies,id',
         'category_id' => 'required|exists:categories,id',
@@ -623,7 +623,7 @@ public function store(Request $request)
 public function update(Request $request, Product $product)
 {
     $rules = [
-        'name' => 'required|string|max:255|unique:products,name,' . $product->id,
+        'name' => ['required', 'string', 'max:255', $this->tenantUniqueRule('products', 'name', $product->id)],
         'description' => 'nullable|string',
         'company_id' => 'required|exists:companies,id',
         'category_id' => 'required|exists:categories,id',

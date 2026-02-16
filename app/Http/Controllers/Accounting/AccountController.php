@@ -122,7 +122,7 @@ class AccountController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'code' => 'required|string|max:50|unique:accounts,code',
+            'code' => ['required', 'string', 'max:50', $this->tenantUniqueRule('accounts', 'code')],
             'account_group_id' => 'required|exists:account_groups,id',
             'account_type' => 'required|in:cash,bank,customer,supplier,employee,expense,income,asset,liability,capital,suspense',
             'opening_balance' => 'nullable|numeric|min:0',
@@ -195,7 +195,7 @@ class AccountController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'code' => 'required|string|max:50|unique:accounts,code,' . $account->id,
+            'code' => ['required', 'string', 'max:50', $this->tenantUniqueRule('accounts', 'code', $account->id)],
             'account_group_id' => 'required|exists:account_groups,id',
             'account_type' => 'required|in:cash,bank,customer,supplier,employee,expense,income,asset,liability,capital,suspense',
             'opening_balance' => 'nullable|numeric|min:0',
