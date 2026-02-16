@@ -221,6 +221,87 @@
                 applyFilters();
             });
 
+            $(document).on('click', '.delete-btn', function() {
+                const transactionId = $(this).data('id');
+                const deleteUrl = `{{ url('transactions') }}/${transactionId}`;
+
+                const runDelete = function() {
+                    $.ajax({
+                        url: deleteUrl,
+                        type: 'DELETE',
+                        data: {
+                            _token: "{{ csrf_token() }}"
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                if (window.Swal) {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Deleted',
+                                        text: response.message || 'Transaction deleted successfully.',
+                                        timer: 2000,
+                                        showConfirmButton: false
+                                    });
+                                } else if (window.ModernAdmin) {
+                                    window.ModernAdmin.showAlert(response.message || 'Transaction deleted successfully.', 'success', 2500);
+                                }
+                                table.ajax.reload(null, false);
+                                return;
+                            }
+
+                            const message = response.message || 'Unable to delete transaction.';
+                            if (window.Swal) {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Delete Failed',
+                                    text: message
+                                });
+                            } else if (window.ModernAdmin) {
+                                window.ModernAdmin.showAlert(message, 'error', 3000);
+                            }
+                        },
+                        error: function(xhr) {
+                            const message = (xhr && xhr.responseJSON && xhr.responseJSON.message)
+                                ? xhr.responseJSON.message
+                                : 'Something went wrong. Please try again.';
+                            if (window.Swal) {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Delete Failed',
+                                    text: message
+                                });
+                            } else if (window.ModernAdmin) {
+                                window.ModernAdmin.showAlert(message, 'error', 3000);
+                            }
+                        }
+                    });
+                };
+
+                if (!window.Swal) {
+                    if (confirm('Are you sure you want to delete this transaction?')) {
+                        runDelete();
+                    }
+                    return;
+                }
+
+                Swal.fire({
+                    title: 'Delete Transaction',
+                    text: 'Are you sure you want to delete this transaction?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#ef4444',
+                    cancelButtonColor: '#6b7280',
+                    confirmButtonText: 'Yes, delete it',
+                    cancelButtonText: 'Cancel',
+                    reverseButtons: true,
+                    focusCancel: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        runDelete();
+                    }
+                });
+            });
+
             // default to debit (customer payments)
             $('#type').val('debit');
             applyFilters();
