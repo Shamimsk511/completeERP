@@ -8,7 +8,6 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
@@ -104,15 +103,7 @@ class AuthController extends Controller
             $tenant = Tenant::query()->find($selectedTenantId, ['id', 'name']);
         }
 
-        $availableTenants = [];
-        if (method_exists($user, 'tenants')) {
-            $availableTenants = $user->tenants()
-                ->orderBy('name')
-                ->get(['tenants.id', 'tenants.name'])
-                ->map(fn ($item) => ['id' => (int) $item->id, 'name' => $item->name])
-                ->values()
-                ->all();
-        }
+        $availableTenants = $this->tenantOptionsForUser($user);
 
         return response()->json([
             'success' => true,
@@ -124,6 +115,39 @@ class AuthController extends Controller
                 'selected_tenant_id' => $selectedTenantId,
                 'selected_tenant_name' => $tenant?->name,
                 'available_tenants' => $availableTenants,
+            ]
+        ], 200);
+    }
+
+    public function loginCompanies(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'password' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation errors',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user || !Hash::check($request->password, $user->password)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid credentials'
+            ], 401);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Company list loaded',
+            'data' => [
+                'companies' => $this->tenantOptionsForUser($user),
             ]
         ], 200);
     }
@@ -221,5 +245,36 @@ class AuthController extends Controller
         }
 
         return str_replace('|tenant:' . $tenantId, '', $tokenName);
+    }
+
+    protected function tenantOptionsForUser(User $user): array
+    {
+        $tenantIds = collect();
+
+        if ($user->tenant_id) {
+            $tenantIds->push((int) $user->tenant_id);
+        }
+
+        if ($user->hasRole('Super Admin') && method_exists($user, 'tenants')) {
+            $extraTenantIds = $user->tenants()
+                ->pluck('tenants.id')
+                ->map(fn ($id) => (int) $id)
+                ->all();
+            $tenantIds = $tenantIds->merge($extraTenantIds);
+        }
+
+        $tenantIds = $tenantIds->unique()->values();
+
+        if ($tenantIds->isEmpty()) {
+            return [];
+        }
+
+        return Tenant::query()
+            ->whereIn('id', $tenantIds)
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(fn ($tenant) => ['id' => (int) $tenant->id, 'name' => $tenant->name])
+            ->values()
+            ->all();
     }
 }
