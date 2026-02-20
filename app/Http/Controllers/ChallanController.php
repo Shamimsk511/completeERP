@@ -685,7 +685,7 @@ class ChallanController extends Controller
 
     public function print(Challan $challan)
     {
-        $challan->load(['invoice.customer', 'items.product.category', 'items.godown']);
+        $challan->load(['invoice.customer', 'items.product.category', 'items.godown', 'items.invoiceItem']);
         return view('challans.print', compact('challan'));
     }
 

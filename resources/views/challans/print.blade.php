@@ -649,10 +649,11 @@
                         <td>{{ $index + 1 }}</td>
                         <td>
                             <div class="product-description">
-                                {{ $item->description ?? ($item->product->name ?? 'N/A') }}
+                                {{ $item->invoiceItem->description ?? $item->description ?? ($item->product->name ?? 'N/A') }}
                             </div>
-                            @if(isset($item->code) && $item->code)
-                                <div class="product-code">{{ $item->code }}</div>
+                            @php($productCode = $item->invoiceItem->code ?? ($item->code ?? null))
+                            @if($productCode)
+                                <div class="product-code">{{ $productCode }}</div>
                             @endif
                         </td>
                         <td class="category-cell">
@@ -763,4 +764,3 @@
     </script>
 </body>
 </html>
-
