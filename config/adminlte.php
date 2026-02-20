@@ -864,6 +864,12 @@ return [
             'can' => 'business-settings-view',
         ],
         [
+            'text' => 'Trash',
+            'route' => 'trash.index',
+            'icon' => 'fas fa-trash-alt',
+            'can'  => 'trash-view',
+        ],
+        [
             'text' => 'SMS Management',
             'icon' => 'fas fa-sms',
             'can'  => ['business-settings-view'],

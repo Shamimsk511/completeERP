@@ -76,4 +76,25 @@ class TransactionObserver
             ]);
         }
     }
+
+    /**
+     * Handle the Transaction "restored" event.
+     */
+    public function restored(Transaction $transaction): void
+    {
+        try {
+            if ($transaction->type === 'debit') {
+                $this->autoPostingService->postTransaction($transaction);
+            } elseif ($transaction->type === 'credit' && $transaction->return_id) {
+                $this->autoPostingService->postReturnRefund($transaction);
+            } elseif ($transaction->type === 'credit') {
+                $this->autoPostingService->postTransaction($transaction);
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to restore transaction ledger entries', [
+                'transaction_id' => $transaction->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
 }

@@ -42,6 +42,11 @@
 
                 <!-- Action Buttons -->
                 <div class="col-auto">
+                    @can('trash-view')
+                    <a href="{{ route('trash.index', ['type' => 'invoices']) }}" class="btn btn-outline-danger btn-sm" title="Invoice Trash">
+                        <i class="fas fa-trash-restore"></i>
+                    </a>
+                    @endcan
                     <button class="btn btn-outline-secondary btn-sm" id="refresh-table" title="Refresh">
                         <i class="fas fa-sync-alt"></i>
                     </button>

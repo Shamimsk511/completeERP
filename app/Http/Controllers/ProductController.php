@@ -713,17 +713,19 @@ public function update(Request $request, Product $product)
                 ->with('error', $message);
         }
 
+        $product->deleted_by = auth()->id();
+        $product->save();
         $product->delete();
 
         if (request()->ajax()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Product deleted successfully.'
+                'message' => 'Product moved to trash successfully.'
             ]);
         }
 
         return redirect()->route('products.index')
-            ->with('success', 'Product deleted successfully.');
+            ->with('success', 'Product moved to trash successfully.');
     }
 
      public function showImportForm()

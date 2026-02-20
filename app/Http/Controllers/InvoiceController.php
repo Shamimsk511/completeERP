@@ -684,10 +684,10 @@ private function calculatePaymentStatus($paidAmount, $total)
     private function generateUniqueInvoiceNumber()
     {
         do {
-            $last_invoice_number = Invoice::max('invoice_number');
+            $last_invoice_number = Invoice::withTrashed()->max('invoice_number');
             $next_number = $last_invoice_number ? (int) substr($last_invoice_number, 4) + 1 : 1;
             $invoice_number = 'INV-' . str_pad($next_number, 5, '0', STR_PAD_LEFT);
-        } while (Invoice::where('invoice_number', $invoice_number)->exists());
+        } while (Invoice::withTrashed()->where('invoice_number', $invoice_number)->exists());
         return $invoice_number;
     }
 
@@ -1041,20 +1041,17 @@ public function destroy(Invoice $invoice)
         // Store values before deletion
         $customerId = $invoice->customer_id;
         $invoiceNumber = $invoice->invoice_number;
-        
-        // Handle balance adjustment before deletion
-        $this->paymentAllocationService->handleInvoiceDeletion($invoice);
-        
-        // Delete related transactions
-        Transaction::where('invoice_id', $invoice->id)->delete();
-        
-        // Delete related items
-        InvoiceItem::withoutGlobalScopes()->where('invoice_id', $invoice->id)->delete();
 
-        // Delete the invoice itself
+        // Move related invoice transactions to trash (for later restore)
+        Transaction::where('invoice_id', $invoice->id)->update(['deleted_by' => Auth::id()]);
+        Transaction::where('invoice_id', $invoice->id)->delete();
+
+        // Move invoice to trash
+        $invoice->deleted_by = Auth::id();
+        $invoice->save();
         $invoice->delete();
 
-        // Re-allocate remaining payments to other invoices
+        // Recalculate balances after moving invoice and its transactions to trash
         $this->paymentAllocationService->allocatePayments($customerId);
 
         DB::commit();
@@ -1063,7 +1060,7 @@ public function destroy(Invoice $invoice)
         
         return response()->json([
             'success' => true, 
-            'message' => 'Invoice #' . $invoiceNumber . ' deleted successfully.'
+            'message' => 'Invoice #' . $invoiceNumber . ' moved to trash successfully.'
         ]);
     } catch (\Exception $e) {
         DB::rollBack();

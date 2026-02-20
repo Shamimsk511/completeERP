@@ -9,6 +9,7 @@ use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Unique;
+use Illuminate\Support\Facades\Schema;
 
 class Controller extends BaseController
 {
@@ -22,13 +23,16 @@ class Controller extends BaseController
     ): Unique {
         $tenantId = TenantContext::currentId();
 
-        $rule = Rule::unique($table, $column)->where(function ($query) use ($tenantId) {
+        $rule = Rule::unique($table, $column)->where(function ($query) use ($tenantId, $table) {
             if ($tenantId) {
                 $query->where('tenant_id', $tenantId);
-                return;
+            } else {
+                $query->whereNull('tenant_id');
             }
 
-            $query->whereNull('tenant_id');
+            if (Schema::hasColumn($table, 'deleted_at')) {
+                $query->whereNull('deleted_at');
+            }
         });
 
         if ($ignoreId !== null) {

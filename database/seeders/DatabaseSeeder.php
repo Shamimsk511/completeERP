@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             // ...other seeders
             PayrollPermissionSeeder::class,
+            TrashPermissionSeeder::class,
             TransactionSeeder::class,
         ]);
     }

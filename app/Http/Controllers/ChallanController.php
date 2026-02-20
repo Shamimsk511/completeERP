@@ -664,7 +664,9 @@ class ChallanController extends Controller
             // Get the associated invoice before deleting the challan
             $invoice = $challan->invoice;
 
-            // Delete the challan
+            // Move challan to trash
+            $challan->deleted_by = Auth::id();
+            $challan->save();
             $challan->delete();
 
             // Update the invoice delivery status
@@ -675,7 +677,7 @@ class ChallanController extends Controller
             DB::commit();
 
             return redirect()->route('challans.index')
-                ->with('success', 'Challan deleted successfully. Stock has been restored.');
+                ->with('success', 'Challan moved to trash successfully. Stock has been restored.');
         } catch (\Exception $e) {
             DB::rollback();
             return redirect()->back()

@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Concerns\BelongsToTenant;
 use App\Models\Accounting\Account;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Invoice extends Model
 {
-    use HasFactory, BelongsToTenant;
+    use HasFactory, SoftDeletes, BelongsToTenant;
 
     protected $fillable = [
         'invoice_number',
@@ -36,6 +37,7 @@ class Invoice extends Model
     protected $casts = [
         'invoice_date' => 'date',
         'referrer_compensated' => 'boolean',
+        'deleted_at' => 'datetime',
     ];
 
     public function customer()
@@ -46,6 +48,11 @@ class Invoice extends Model
     public function referrer()
     {
         return $this->belongsTo(Referrer::class);
+    }
+
+    public function deletedBy()
+    {
+        return $this->belongsTo(User::class, 'deleted_by');
     }
 
     public function items()
@@ -75,7 +82,7 @@ class Invoice extends Model
     // Generate next invoice number
     public static function getNextInvoiceNumber()
     {
-        $lastInvoice = self::orderBy('id', 'desc')->first();
+        $lastInvoice = self::withTrashed()->orderBy('id', 'desc')->first();
         $nextNumber = $lastInvoice ? (int)substr($lastInvoice->invoice_number, 3) + 1 : 1000;
         return 'INV' . $nextNumber;
     }

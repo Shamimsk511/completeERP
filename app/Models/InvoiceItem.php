@@ -39,14 +39,18 @@ class InvoiceItem extends Model
 
     public function getRemainingQuantityAttribute()
     {
-        $deliveredQuantity = $this->challanItems()->sum('quantity');
+        $deliveredQuantity = ChallanItem::where('invoice_item_id', $this->id)
+            ->whereHas('challan')
+            ->sum('quantity');
         return $this->quantity - $deliveredQuantity;
     }
 
         // Get delivered quantity
     public function getDeliveredQuantityAttribute()
         {
-            return $this->challanItems()->sum('quantity');
+            return ChallanItem::where('invoice_item_id', $this->id)
+                ->whereHas('challan')
+                ->sum('quantity');
         }
 
 

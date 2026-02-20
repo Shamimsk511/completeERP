@@ -87,6 +87,7 @@ Route::middleware(['auth:web', 'verified', 'feature', 'tenant'])->group(function
     require __DIR__.'/web/admin/users.php';
     require __DIR__.'/web/admin/roles.php';
     require __DIR__.'/web/admin/settings.php';
+    require __DIR__.'/web/admin/trash.php';
     require __DIR__.'/web/business/customers.php';
     require __DIR__.'/web/business/referrers.php';
     require __DIR__.'/web/business/products.php';

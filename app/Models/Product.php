@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Concerns\BelongsToTenant;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Product extends Model
 {
-    use HasFactory, BelongsToTenant;
+    use HasFactory, SoftDeletes, BelongsToTenant;
 
     protected $fillable = [
         'name',
@@ -31,6 +32,7 @@ class Product extends Model
         'purchase_price' => 'decimal:2',
         'sale_price' => 'decimal:2',
         'weight_value' => 'decimal:3',
+        'deleted_at' => 'datetime',
     ];
     public function company()
     {
@@ -40,6 +42,11 @@ class Product extends Model
     public function category()
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function deletedBy()
+    {
+        return $this->belongsTo(User::class, 'deleted_by');
     }
 
     public function defaultGodown()

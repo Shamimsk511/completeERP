@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Models\Concerns\BelongsToTenant;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Transaction extends Model
 {
-    use HasFactory, BelongsToTenant;
+    use HasFactory, SoftDeletes, BelongsToTenant;
 
     protected $fillable = [
         'customer_id',
@@ -36,6 +37,7 @@ class Transaction extends Model
     protected $casts = [
         'amount' => 'decimal:2',
         'created_at' => 'datetime',
+        'deleted_at' => 'datetime',
     ];
     public function customer()
     {
@@ -46,6 +48,12 @@ class Transaction extends Model
     {
         return $this->belongsTo(Invoice::class);
     }
+
+    public function deletedBy()
+    {
+        return $this->belongsTo(User::class, 'deleted_by');
+    }
+
     public function productReturn()
 {
     return $this->belongsTo(ProductReturn::class, 'return_id');

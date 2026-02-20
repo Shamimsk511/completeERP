@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Concerns\BelongsToTenant;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class OtherDelivery extends Model
 {
-    use HasFactory, BelongsToTenant;
+    use HasFactory, SoftDeletes, BelongsToTenant;
 
     protected $fillable = [
         'challan_number',
@@ -28,6 +29,7 @@ class OtherDelivery extends Model
 
     protected $casts = [
         'delivery_date' => 'date',
+        'deleted_at' => 'datetime',
     ];
 
     public function items()
@@ -40,15 +42,21 @@ class OtherDelivery extends Model
         return $this->belongsTo(User::class, 'delivered_by');
     }
 
+    public function deletedBy()
+    {
+        return $this->belongsTo(User::class, 'deleted_by');
+    }
+
     public static function getNextChallanNumber()
     {
         $prefix = 'OD-';
         $year = date('Y');
         $month = date('m');
         
-        $lastChallan = self::where('challan_number', 'like', $prefix . $year . $month . '%')
-                           ->orderBy('id', 'desc')
-                           ->first();
+        $lastChallan = self::withTrashed()
+            ->where('challan_number', 'like', $prefix . $year . $month . '%')
+            ->orderBy('id', 'desc')
+            ->first();
         
         if ($lastChallan) {
             $lastNumber = intval(substr($lastChallan->challan_number, -4));

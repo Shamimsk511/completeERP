@@ -487,12 +487,14 @@ class OtherDeliveryController extends Controller
             }
             
             // Delete delivery and its items (cascade)
+            $otherDelivery->deleted_by = Auth::id();
+            $otherDelivery->save();
             $otherDelivery->delete();
             
             DB::commit();
             
             return redirect()->route('other-deliveries.index')
-                ->with('success', 'Delivery challan deleted successfully.');
+                ->with('success', 'Delivery challan moved to trash successfully.');
         } catch (\Exception $e) {
             DB::rollback();
             return redirect()->back()

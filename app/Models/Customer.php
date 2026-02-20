@@ -16,6 +16,7 @@ use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -23,7 +24,7 @@ use App\Models\Accounting\AccountGroup;
 
 class Customer extends Model implements Authenticatable
 {
-    use HasFactory, BelongsToTenant;
+    use HasFactory, SoftDeletes, BelongsToTenant;
 
     protected $fillable = [
         'name',
@@ -40,6 +41,7 @@ class Customer extends Model implements Authenticatable
         'last_login_at' => 'datetime',
         'password_changed_at' => 'datetime',
         'password_change_skipped_at' => 'datetime',
+        'deleted_at' => 'datetime',
     ];
 
     protected $hidden = [
@@ -168,6 +170,11 @@ class Customer extends Model implements Authenticatable
     public function accountGroup(): BelongsTo
     {
         return $this->belongsTo(AccountGroup::class, 'account_group_id');
+    }
+
+    public function deletedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'deleted_by');
     }
 
     /**

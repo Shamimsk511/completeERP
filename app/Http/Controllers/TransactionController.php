@@ -340,6 +340,8 @@ public function create(Request $request)
             $customerId = $transaction->customer_id;
             
             // Delete the transaction
+            $transaction->deleted_by = auth()->id();
+            $transaction->save();
             $transaction->delete();
             
             // Re-allocate payments to recalculate customer balance
@@ -349,7 +351,7 @@ public function create(Request $request)
             
             return response()->json([
                 'success' => true,
-                'message' => 'Transaction deleted successfully.'
+                'message' => 'Transaction moved to trash successfully.'
             ]);
             
         } catch (\Exception $e) {

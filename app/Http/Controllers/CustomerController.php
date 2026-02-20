@@ -500,10 +500,20 @@ public function returnItemsData(Request $request, Customer $customer)
      */
     public function destroy(Customer $customer)
     {
+        $hasActiveInvoices = Invoice::where('customer_id', $customer->id)->exists();
+        $hasActiveTransactions = Transaction::where('customer_id', $customer->id)->exists();
+
+        if ($hasActiveInvoices || $hasActiveTransactions) {
+            return redirect()->route('customers.index')
+                ->with('error', 'Customer cannot be moved to trash while active invoices or transactions exist.');
+        }
+
+        $customer->deleted_by = auth()->id();
+        $customer->save();
         $customer->delete();
 
         return redirect()->route('customers.index')
-            ->with('success', 'Customer deleted successfully');
+            ->with('success', 'Customer moved to trash successfully.');
     }
 
     public function printLedger(Customer $customer)

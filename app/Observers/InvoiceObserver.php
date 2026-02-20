@@ -64,4 +64,19 @@ class InvoiceObserver
             ]);
         }
     }
+
+    /**
+     * Handle the Invoice "restored" event.
+     */
+    public function restored(Invoice $invoice): void
+    {
+        try {
+            $this->autoPostingService->postInvoice($invoice);
+        } catch (\Exception $e) {
+            Log::error('Failed to restore invoice ledger entries', [
+                'invoice_id' => $invoice->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
 }
