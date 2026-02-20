@@ -137,8 +137,74 @@ class InvoiceController extends Controller
             ->take($request->input('length', 15))
             ->get();
 
-        $data = $invoices->map(function ($invoice) {
-            $paymentStatus = $invoice->payment_status;
+        $displayPaymentByInvoiceId = [];
+        $invoiceIds = $invoices->pluck('id')->filter()->values();
+        $pageCustomerIds = $invoices->pluck('customer_id')->filter()->unique()->values();
+
+        if ($invoiceIds->isNotEmpty() && $pageCustomerIds->isNotEmpty()) {
+            $customerOutstandingMap = $invoices
+                ->pluck('customer')
+                ->filter()
+                ->unique('id')
+                ->mapWithKeys(function ($customer) {
+                    return [$customer->id => (float) ($customer->outstanding_balance ?? 0)];
+                });
+
+            $customerInvoices = Invoice::query()
+                ->select(['id', 'customer_id', 'total', 'invoice_date'])
+                ->whereIn('customer_id', $pageCustomerIds)
+                ->orderBy('invoice_date', 'desc')
+                ->orderBy('id', 'desc')
+                ->get();
+
+            $allCustomerInvoiceIds = $customerInvoices->pluck('id')->values();
+            $invoicePayments = collect();
+            if ($allCustomerInvoiceIds->isNotEmpty()) {
+                $invoicePayments = Transaction::query()
+                    ->selectRaw('invoice_id, COALESCE(SUM(amount + COALESCE(discount_amount, 0)), 0) as total_paid')
+                    ->where('type', 'debit')
+                    ->whereIn('invoice_id', $allCustomerInvoiceIds)
+                    ->groupBy('invoice_id')
+                    ->pluck('total_paid', 'invoice_id');
+            }
+
+            foreach ($customerInvoices->groupBy('customer_id') as $customerId => $items) {
+                // Outstanding reflects unlinked payments as well; apply it newest-first for index display.
+                $remainingDue = max(0, (float) ($customerOutstandingMap[$customerId] ?? 0));
+
+                foreach ($items as $item) {
+                    $total = (float) $item->total;
+                    $linkedPaid = min($total, max(0, (float) ($invoicePayments[$item->id] ?? 0)));
+                    $residualDue = max(0, $total - $linkedPaid);
+
+                    $due = min($remainingDue, $residualDue);
+                    $paid = $total - $due;
+
+                    if ($due <= 0) {
+                        $status = 'paid';
+                    } elseif ($paid > 0) {
+                        $status = 'partial';
+                    } else {
+                        $status = 'due';
+                    }
+
+                    $displayPaymentByInvoiceId[$item->id] = [
+                        'paid' => $paid,
+                        'due' => $due,
+                        'status' => $status,
+                    ];
+
+                    $remainingDue -= $due;
+                    if ($remainingDue <= 0) {
+                        $remainingDue = 0;
+                    }
+                }
+            }
+        }
+
+        $data = $invoices->map(function ($invoice) use ($displayPaymentByInvoiceId) {
+            $displayPayment = $displayPaymentByInvoiceId[$invoice->id] ?? null;
+            $paymentStatus = $displayPayment['status'] ?? $invoice->payment_status;
 
             // // Payment status HTML with overpayment indication
             // $paymentStatusHtml = sprintf(
@@ -163,7 +229,8 @@ class InvoiceController extends Controller
             //     );
             // }
 
-            $dueAmount = $invoice->due_amount ?? 0;
+            $paidAmount = (float) ($displayPayment['paid'] ?? $invoice->paid_amount ?? 0);
+            $dueAmount = (float) ($displayPayment['due'] ?? $invoice->due_amount ?? 0);
             $customerOutstanding = (float) ($invoice->customer->outstanding_balance ?? 0);
             $signedOutstanding = $customerOutstanding;
             $overpaidAmount = $dueAmount < 0 ? abs($dueAmount) : 0;
@@ -181,7 +248,7 @@ class InvoiceController extends Controller
                 'customer_url' => route('customers.show', $invoice->customer_id),
                 'invoice_type' => $invoice->invoice_type,
                 'total' => number_format($invoice->total, 2),
-                'paid' => number_format($invoice->paid_amount, 2),
+                'paid' => number_format($paidAmount, 2),
                 'due' => number_format(abs($dueAmount), 2),
                 'due_is_negative' => $dueAmount < 0,
                 'customer_outstanding' => number_format(abs($customerOutstanding), 2),
