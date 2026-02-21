@@ -16,6 +16,7 @@ class User extends Authenticatable
         'email',
         'password',
         'tenant_id',
+        'mobile_push_enabled',
     ];
 
     /**
@@ -39,6 +40,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'last_seen_at' => 'datetime',
+            'mobile_push_enabled' => 'boolean',
         ];
     }
 

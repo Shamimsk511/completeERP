@@ -14,11 +14,15 @@ use App\Models\Purchase;
 use App\Models\Transaction;
 use App\Models\Customer;
 use App\Models\Company;
+use App\Models\OtherDelivery;
+use App\Models\Challan;
 use App\Observers\InvoiceObserver;
 use App\Observers\PurchaseObserver;
 use App\Observers\TransactionObserver;
 use App\Observers\CustomerObserver;
 use App\Observers\CompanyObserver;
+use App\Observers\OtherDeliveryObserver;
+use App\Observers\ChallanObserver;
 use App\Models\BusinessSetting;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Cache;
@@ -70,6 +74,8 @@ class AppServiceProvider extends ServiceProvider
         Invoice::observe(InvoiceObserver::class);
         Purchase::observe(PurchaseObserver::class);
         Transaction::observe(TransactionObserver::class);
+        OtherDelivery::observe(OtherDeliveryObserver::class);
+        Challan::observe(ChallanObserver::class);
 
         // Register observers to auto-create ledger accounts for customers and vendors
         Customer::observe(CustomerObserver::class);

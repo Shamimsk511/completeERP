@@ -5,17 +5,23 @@ namespace App\Observers;
 use App\Models\Invoice;
 use App\Services\Accounting\AutoPostingService;
 use App\Services\Accounting\GeneralLedgerService;
+use App\Services\MobileNotificationService;
 use Illuminate\Support\Facades\Log;
 
 class InvoiceObserver
 {
     protected AutoPostingService $autoPostingService;
     protected GeneralLedgerService $glService;
+    protected MobileNotificationService $mobileNotificationService;
 
-    public function __construct(AutoPostingService $autoPostingService, GeneralLedgerService $glService)
-    {
+    public function __construct(
+        AutoPostingService $autoPostingService,
+        GeneralLedgerService $glService,
+        MobileNotificationService $mobileNotificationService
+    ) {
         $this->autoPostingService = $autoPostingService;
         $this->glService = $glService;
+        $this->mobileNotificationService = $mobileNotificationService;
     }
 
     /**
@@ -27,6 +33,27 @@ class InvoiceObserver
             $this->autoPostingService->postInvoice($invoice);
         } catch (\Exception $e) {
             Log::error('Failed to auto-post invoice ledger entries', [
+                'invoice_id' => $invoice->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        try {
+            $invoice->loadMissing('customer:id,name');
+            $this->mobileNotificationService->notifyEvent(
+                'invoice_created',
+                'New Invoice',
+                'Invoice ' . $invoice->invoice_number . ' for ' . number_format((float) $invoice->total, 2) . ' created.',
+                [
+                    'invoice_id' => $invoice->id,
+                    'invoice_number' => $invoice->invoice_number,
+                    'customer_name' => $invoice->customer?->name,
+                    'amount' => (float) $invoice->total,
+                ],
+                $invoice->tenant_id ? (int) $invoice->tenant_id : null
+            );
+        } catch (\Exception $e) {
+            Log::warning('Failed to push mobile invoice notification', [
                 'invoice_id' => $invoice->id,
                 'error' => $e->getMessage(),
             ]);

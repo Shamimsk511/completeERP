@@ -60,12 +60,28 @@ class MobileReferenceController extends Controller
             return $this->noTenant();
         }
 
+        $search = trim((string) $request->input('search', ''));
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('products.name', 'like', '%' . $search . '%')
+                    ->orWhereHas('category', function ($cq) use ($search) {
+                        $cq->where('name', 'like', '%' . $search . '%');
+                    })
+                    ->orWhereHas('company', function ($cq) use ($search) {
+                        $cq->where('name', 'like', '%' . $search . '%');
+                    });
+            });
+        }
+
         $inStock = filter_var($request->input('in_stock', false), FILTER_VALIDATE_BOOLEAN);
         if ($inStock) {
             $query->where('current_stock', '>', 0);
         }
 
-        $items = $query->get([
+        $limit = (int) $request->input('limit', 50);
+        $limit = max(1, min(200, $limit));
+
+        $items = $query->limit($limit)->get([
             'id',
             'name',
             'company_id',
@@ -149,7 +165,9 @@ class MobileReferenceController extends Controller
         if (method_exists($user, 'can') && (
             $user->can('purchase-create') ||
             $user->can('other-delivery-create') ||
-            $user->can('invoice-create')
+            $user->can('invoice-create') ||
+            $user->can('product-list') ||
+            $user->can('invoice-list')
         )) {
             return true;
         }

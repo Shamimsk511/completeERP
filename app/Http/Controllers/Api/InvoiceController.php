@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Invoice;
 use App\Models\Transaction;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 class InvoiceController extends Controller
 {
@@ -179,6 +181,59 @@ class InvoiceController extends Controller
         ]);
     }
 
+    public function printPdf(Request $request, Invoice $invoice): Response|JsonResponse
+    {
+        $user = $request->user();
+
+        if (!$this->canReadInvoices($user)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You do not have permission to view invoices.',
+            ], 403);
+        }
+
+        if (!$this->canAccessInvoiceTenant($invoice, $user)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invoice not found.',
+            ], 404);
+        }
+
+        $invoice->load(['customer', 'items.product.category', 'items.product.company']);
+
+        $settings = app('business.settings');
+        $selectedTemplate = (string) ($settings->invoice_template ?? 'standard');
+        $allowedTemplates = ['standard', 'modern', 'simple', 'bold', 'elegant', 'imaginative'];
+        if (!in_array($selectedTemplate, $allowedTemplates, true)) {
+            $selectedTemplate = 'standard';
+        }
+
+        $printOptions = array_merge(
+            $this->defaultInvoicePrintOptions(),
+            (array) ($settings->invoice_print_options ?? [])
+        );
+
+        $businessSettings = $settings;
+        $html = view('invoices.print', compact(
+            'invoice',
+            'selectedTemplate',
+            'printOptions',
+            'businessSettings'
+        ))->render();
+
+        $pdf = Pdf::setOptions([
+            'isRemoteEnabled' => true,
+            'isHtml5ParserEnabled' => true,
+        ])->loadHTML($html)->setPaper('a4');
+
+        $fileName = 'invoice-' . ($invoice->invoice_number ?: $invoice->id) . '.pdf';
+
+        return response($pdf->output(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+        ]);
+    }
+
     protected function canReadInvoices($user): bool
     {
         if (!$user) {
@@ -244,5 +299,21 @@ class InvoiceController extends Controller
         }
 
         return 1;
+    }
+
+    protected function defaultInvoicePrintOptions(): array
+    {
+        return [
+            'show_company_phone' => true,
+            'show_company_email' => true,
+            'show_company_address' => true,
+            'show_company_bin' => true,
+            'show_bank_details' => true,
+            'show_terms' => true,
+            'show_footer_message' => true,
+            'show_customer_qr' => true,
+            'show_signatures' => true,
+            'invoice_phone_override' => '',
+        ];
     }
 }
