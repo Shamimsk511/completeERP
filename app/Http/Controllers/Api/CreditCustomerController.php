@@ -97,6 +97,10 @@ class CreditCustomerController extends Controller
 
     protected function applyTenantFilter($query, $user): bool
     {
+        if (!property_exists($user, 'tenant_id')) {
+            return false;
+        }
+
         $tenantId = $this->tenantIdForUser($user);
         if ($tenantId) {
             $query->where('customers.tenant_id', $tenantId);
@@ -121,10 +125,6 @@ class CreditCustomerController extends Controller
             return (int) $matches[1];
         }
 
-        if (!empty($user->tenant_id)) {
-            return (int) $user->tenant_id;
-        }
-
-        return 1;
+        return !empty($user->tenant_id) ? (int) $user->tenant_id : null;
     }
 }

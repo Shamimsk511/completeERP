@@ -155,10 +155,6 @@ class MobileDecorCalculatorController extends Controller
             return (int) $matches[1];
         }
 
-        if (!empty($user->tenant_id)) {
-            return (int) $user->tenant_id;
-        }
-
-        return 1;
+        return !empty($user->tenant_id) ? (int) $user->tenant_id : null;
     }
 }
